@@ -48,6 +48,8 @@ jobs:
       - name: Generate wrapper & build APK
         run: |
           cd android-template
+          echo "android.useAndroidX=true" > gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
           gradle wrapper --gradle-version 8.2
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
