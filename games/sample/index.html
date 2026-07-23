@@ -9,31 +9,40 @@
   html,body{height:100%;overflow:hidden;background:#070912;
     font-family:system-ui,Segoe UI,Roboto,sans-serif;color:#fff;touch-action:none;user-select:none}
   #game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden}
-  canvas{display:block;width:100%;height:100%;touch-action:none}
-  /* HUD skor di atas */
-  #hud{position:absolute;top:0;left:0;right:0;padding:14px 18px;
-    display:flex;justify-content:space-between;pointer-events:none;
+  canvas{display:block;width:100%;height:100%;touch-action:none;position:absolute;inset:0;z-index:0}
+  #hud{position:absolute;top:0;left:0;right:0;padding:14px 16px;z-index:2;
+    display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;
     font-weight:700;letter-spacing:1px;text-shadow:0 0 10px rgba(0,255,255,.6)}
-  #hud .lbl{font-size:11px;opacity:.6;display:block}
-  #hud .val{font-size:26px}
-  #hud .hi .val{color:#ff4 d8;color:#ff4dd8;text-shadow:0 0 10px rgba(255,77,216,.6)}
-  /* overlay start / game over */
-  .screen{position:absolute;inset:0;display:flex;flex-direction:column;
+  .stats{display:flex;flex-direction:column;gap:4px}
+  .lbl{font-size:10px;opacity:.6;display:block}
+  .val{font-size:24px}
+  .hi .val{color:#ff4dd8;text-shadow:0 0 10px rgba(255,77,216,.6)}
+  .icons{display:flex;gap:8px}
+  .iconbtn{pointer-events:auto;width:42px;height:42px;border-radius:50%;font-size:18px;
+    border:1px solid rgba(255,255,255,.22);background:rgba(10,14,31,.5);color:#fff;
+    backdrop-filter:blur(4px);cursor:pointer}
+  .iconbtn:active{transform:scale(.9)}
+  .screen{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;gap:12px;
     align-items:center;justify-content:center;text-align:center;
-    background:rgba(7,9,18,.78);backdrop-filter:blur(4px);padding:24px}
-  .screen.hide{display:none}
-  .title{font-size:40px;font-weight:900;letter-spacing:2px;
+    background:rgba(7,9,18,.80);backdrop-filter:blur(5px);padding:24px}
+  .hide{display:none!important}
+  .title{font-size:42px;font-weight:900;letter-spacing:2px;line-height:1.1;
     background:linear-gradient(90deg,#00f0ff,#b14dff,#ff4dd8);
     -webkit-background-clip:text;background-clip:text;color:transparent;
-    filter:drop-shadow(0 0 18px rgba(120,80,255,.5))}
-  .sub{margin-top:8px;opacity:.7;font-size:14px;max-width:280px;line-height:1.5}
-  .big{font-size:54px;font-weight:900;margin:10px 0;color:#00f0ff;text-shadow:0 0 20px rgba(0,240,255,.6)}
-  .btn{margin-top:26px;padding:16px 44px;border:0;border-radius:40px;cursor:pointer;
-    font-size:18px;font-weight:800;letter-spacing:1px;color:#070912;
+    filter:drop-shadow(0 0 18px rgba(120,80,255,.5));animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .sub{opacity:.72;font-size:14px;max-width:280px;line-height:1.5}
+  .big{font-size:54px;font-weight:900;color:#00f0ff;text-shadow:0 0 20px rgba(0,240,255,.6)}
+  .btn{padding:14px 40px;border:0;border-radius:40px;cursor:pointer;min-width:200px;
+    font-size:17px;font-weight:800;letter-spacing:1px;color:#070912;
     background:linear-gradient(90deg,#00f0ff,#b14dff);
-    box-shadow:0 0 24px rgba(120,80,255,.6);transition:transform .1s}
+    box-shadow:0 0 24px rgba(120,80,255,.55);transition:transform .1s}
   .btn:active{transform:scale(.94)}
-  .hint{margin-top:18px;font-size:12px;opacity:.5}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.28);color:#fff;box-shadow:none}
+  .hint{font-size:12px;opacity:.5;margin-top:6px}
+  .exithint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:5;
+    background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.15);
+    padding:10px 18px;border-radius:20px;font-size:13px}
 </style>
 </head>
 <body>
@@ -41,222 +50,198 @@
   <canvas id="cv"></canvas>
 
   <div id="hud">
-    <div class="sc"><span class="lbl">SKOR</span><span class="val" id="score">0</span></div>
-    <div class="hi"><span class="lbl">TERBAIK</span><span class="val" id="best">0</span></div>
+    <div class="stats">
+      <div class="sc"><span class="lbl">SKOR</span><span class="val" id="score">0</span></div>
+      <div class="hi"><span class="lbl">TERBAIK</span><span class="val" id="best">0</span></div>
+    </div>
+    <div class="icons">
+      <button class="iconbtn" id="muteBtn" aria-label="mute">🔊</button>
+      <button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button>
+    </div>
   </div>
 
-  <!-- layar mulai -->
   <div class="screen" id="startScr">
-    <div class="title">NEON DODGE</div>
+    <div class="title">NEON<br>DODGE</div>
     <div class="sub">Geser jarimu untuk menggerakkan bola. Hindari rintangan neon yang jatuh!</div>
     <button class="btn" id="startBtn">MULAI</button>
-    <div class="hint">Sentuh & geser • atau pakai mouse</div>
+    <button class="btn ghost" id="exitBtn1">KELUAR</button>
+    <div class="hint">Sentuh & geser • ada musik 🎵 & pause ⏸</div>
   </div>
 
-  <!-- layar game over -->
+  <div class="screen hide" id="pauseScr">
+    <div class="title" style="font-size:34px">PAUSED</div>
+    <button class="btn" id="resumeBtn">LANJUT</button>
+    <button class="btn ghost" id="menuBtn2">KE MENU</button>
+    <button class="btn ghost" id="exitBtn2">KELUAR</button>
+  </div>
+
   <div class="screen hide" id="overScr">
     <div class="title" style="font-size:30px">GAME OVER</div>
     <div class="sub">Skor kamu</div>
     <div class="big" id="finalScore">0</div>
-    <div class="sub" id="newBest" style="color:#ff4dd8;display:none">🏆 REKOR BARU!</div>
+    <div class="sub" id="newBest" style="color:#ff4dd8">🏆 REKOR BARU!</div>
     <button class="btn" id="retryBtn">MAIN LAGI</button>
+    <button class="btn ghost" id="menuBtn3">KE MENU</button>
+    <button class="btn ghost" id="exitBtn3">KELUAR</button>
   </div>
+
+  <div class="exithint hide" id="exitHint">Tekan tombol ◀ Back di HP untuk keluar</div>
 </div>
 
 <script>
 (function(){
-  const cv = document.getElementById('cv');
-  const ctx = cv.getContext('2d');
-  const elScore = document.getElementById('score');
-  const elBest  = document.getElementById('best');
-  const startScr = document.getElementById('startScr');
-  const overScr  = document.getElementById('overScr');
-  const finalScore = document.getElementById('finalScore');
-  const newBest = document.getElementById('newBest');
+  const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  const elScore=document.getElementById('score'), elBest=document.getElementById('best');
+  const screens={start:document.getElementById('startScr'),pause:document.getElementById('pauseScr'),over:document.getElementById('overScr')};
+  const finalScore=document.getElementById('finalScore'), newBest=document.getElementById('newBest');
+  const exitHint=document.getElementById('exitHint'), muteBtn=document.getElementById('muteBtn');
 
-  let W=0, H=0, dpr=1;
-  const NEON = ['#00f0ff','#b14dff','#ff4dd8','#39ff14','#ffe600'];
+  let W=0,H=0,dpr=1;
+  const NEON=['#00f0ff','#b14dff','#ff4dd8','#39ff14','#ffe600'];
+  let state='start', score=0, best=0, speed=0, gridY=0, spawnT=0, shake=0, bgHidden=false;
+  let obstacles=[], particles=[], stars=[];
+  let player={x:0,y:0,r:14,tx:0}, last=0;
 
-  // state game
-  let state = 'start';      // 'start' | 'play' | 'over'
-  let score = 0, best = 0;
-  let speed = 0, gridY = 0, spawnT = 0;
-  let obstacles = [], particles = [];
-  let player = {x:0, y:0, r:14, tx:0};
-  let last = 0, paused = false;
+  try{ best=parseInt(localStorage.getItem('neonDodgeBest')||'0',10)||0; }catch(e){}
+  elBest.textContent=best;
 
-  try { best = parseInt(localStorage.getItem('neonDodgeBest')||'0',10)||0; } catch(e){}
-  elBest.textContent = best;
-
-  // --- ukuran canvas (tajam & responsif) ---
+  /* ---------- canvas ---------- */
   function resize(){
-    dpr = Math.min(window.devicePixelRatio||1, 2);
-    W = cv.clientWidth; H = cv.clientHeight;
-    cv.width = Math.floor(W*dpr); cv.height = Math.floor(H*dpr);
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=cv.clientWidth; H=cv.clientHeight;
+    cv.width=Math.floor(W*dpr); cv.height=Math.floor(H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    player.y = H - 90;
-    if(player.x===0){ player.x = W/2; player.tx = W/2; }
-    player.x = Math.max(player.r, Math.min(W-player.r, player.x));
+    player.y=H-90; if(!player.x){player.x=W/2;player.tx=W/2;}
+    player.x=Math.max(player.r,Math.min(W-player.r,player.x));
+    if(!stars.length) for(let i=0;i<46;i++) stars.push({x:Math.random()*W,y:Math.random()*H,z:.3+Math.random()*1.2});
   }
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize',resize);
 
-  // --- kontrol: pointer (sentuh + mouse jadi satu) ---
-  let dragging = false;
-  function pointerX(e){
-    const rect = cv.getBoundingClientRect();
-    return e.clientX - rect.left;
+  /* ---------- kontrol ---------- */
+  let dragging=false;
+  const px=e=>e.clientX-cv.getBoundingClientRect().left;
+  cv.addEventListener('pointerdown',e=>{if(state==='play'){dragging=true;player.tx=px(e);}});
+  cv.addEventListener('pointermove',e=>{if(dragging&&state==='play'){player.tx=px(e);e.preventDefault();}},{passive:false});
+  window.addEventListener('pointerup',()=>dragging=false);
+
+  /* ---------- layar ---------- */
+  function showOnly(k){for(const s in screens)screens[s].classList.add('hide');if(k)screens[k].classList.remove('hide');}
+  function hideAll(){for(const s in screens)screens[s].classList.add('hide');}
+
+  /* ---------- musik synthwave (Web Audio, tanpa file) ---------- */
+  let AC=null,master=null,started=false,muted=false,sched=null,nextNote=0,tick=0,noiseBuf=null;
+  const BPM=124, SIX=(60/BPM)/4;
+  const BASS=[110,87.31,130.81,98], PENTA=[220,261.63,293.66,329.63,392,440,523.25];
+  function env(g,t,peak,dur){g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(peak,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);}
+  function voice(freq,t,dur,type,peak,flt){
+    const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);
+    let node=o; if(flt){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=flt;o.connect(f);node=f;}
+    node.connect(g);g.connect(master);env(g,t,peak,dur);o.start(t);o.stop(t+dur+.05);
   }
-  cv.addEventListener('pointerdown', e=>{ if(state==='play'){dragging=true; player.tx=pointerX(e);} });
-  cv.addEventListener('pointermove', e=>{ if(dragging&&state==='play'){ player.tx=pointerX(e); e.preventDefault(); } }, {passive:false});
-  window.addEventListener('pointerup', ()=> dragging=false);
+  function kick(t){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+.12);g.connect(master);env(g,t,.85,.2);o.start(t);o.stop(t+.25);}
+  function hat(t){const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=7000;const g=AC.createGain();s.connect(f);f.connect(g);g.connect(master);env(g,t,.12,.05);s.start(t);s.stop(t+.06);}
+  function scheduleStep(n,t){
+    const s=n%16, bar=Math.floor(n/16)%4;
+    if(s%4===0)kick(t);
+    if(s%4===2)hat(t);
+    if(s===0||s===8)voice(BASS[bar],t,.3,'sawtooth',.22,650);
+    if(s%2===0)voice(PENTA[(n*3+bar)%PENTA.length],t,.18,'triangle',.10);
+  }
+  function scheduler(){if(!AC)return;while(nextNote<AC.currentTime+.12){scheduleStep(tick,nextNote);nextNote+=SIX;tick++;}}
+  function startAudio(){
+    if(started)return;const WAC=window.AudioContext||window.webkitAudioContext;if(!WAC)return;
+    AC=new WAC();master=AC.createGain();master.gain.value=muted?0:.16;
+    const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=6500;
+    const dl=AC.createDelay();dl.delayTime.value=SIX*6;const fb=AC.createGain();fb.gain.value=.26;const wet=AC.createGain();wet.gain.value=.3;
+    master.connect(lp);lp.connect(AC.destination);master.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(lp);
+    noiseBuf=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    nextNote=AC.currentTime+.1;tick=0;sched=setInterval(scheduler,25);started=true;
+  }
+  function pauseMusic(){if(AC&&AC.state==='running')AC.suspend();}
+  function resumeMusic(){if(AC&&AC.state==='suspended')AC.resume();}
+  function toggleMute(){muted=!muted;if(master)master.gain.setValueAtTime(muted?0:.16,AC.currentTime);muteBtn.textContent=muted?'🔇':'🔊';}
 
-  // --- mulai / ulang ---
+  /* ---------- gameplay ---------- */
   function start(){
-    score=0; speed=3.2; gridY=0; spawnT=0;
-    obstacles=[]; particles=[];
-    player.x=W/2; player.tx=W/2; player.y=H-90;
-    state='play';
-    startScr.classList.add('hide');
-    overScr.classList.add('hide');
-    last = performance.now();
+    score=0;speed=3.2;gridY=0;spawnT=0;obstacles=[];particles=[];shake=0;
+    player.x=W/2;player.tx=W/2;player.y=H-90;dragging=false;
+    state='play';hideAll();startAudio();resumeMusic();last=performance.now();
   }
-  document.getElementById('startBtn').addEventListener('click', start);
-  document.getElementById('retryBtn').addEventListener('click', start);
-
+  function goMenu(){state='start';dragging=false;showOnly('start');}
+  function explosion(){for(let i=0;i<40;i++){const a=Math.random()*6.28,sp=2+Math.random()*6;particles.push({x:player.x,y:player.y,r:3+Math.random()*4,life:1,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,c:NEON[(Math.random()*NEON.length)|0]});}}
   function gameOver(){
-    state='over';
-    const s = Math.floor(score);
-    finalScore.textContent = s;
-    if(s > best){
-      best = s;
-      try { localStorage.setItem('neonDodgeBest', String(best)); } catch(e){}
-      elBest.textContent = best;
-      newBest.style.display='block';
-    } else { newBest.style.display='none'; }
-    overScr.classList.remove('hide');
+    state='over';shake=16;explosion();const s=Math.floor(score);finalScore.textContent=s;
+    if(s>best){best=s;try{localStorage.setItem('neonDodgeBest',String(best));}catch(e){}elBest.textContent=best;newBest.style.display='block';}
+    else newBest.style.display='none';
+    showOnly('over');
+  }
+  function exitApp(){
+    if(window.Android&&typeof window.Android.exitApp==='function'){window.Android.exitApp();return;}
+    try{window.close();}catch(e){}
+    exitHint.classList.remove('hide');setTimeout(()=>exitHint.classList.add('hide'),2500);
   }
 
-  // --- spawn rintangan ---
-  function spawn(){
-    const w = 40 + Math.random()*90;
-    obstacles.push({
-      x: Math.random()*(W-w),
-      y: -30, w:w, h:18+Math.random()*16,
-      c: NEON[(Math.random()*NEON.length)|0]
-    });
-  }
+  function spawn(){const w=40+Math.random()*90;obstacles.push({x:Math.random()*(W-w),y:-30,w:w,h:18+Math.random()*16,c:NEON[(Math.random()*NEON.length)|0]});}
+  function trail(){particles.push({x:player.x,y:player.y,r:player.r*.8,life:1,vx:0,vy:0,c:NEON[(Math.random()*NEON.length)|0]});if(particles.length>90)particles.shift();}
 
-  // --- partikel jejak ---
-  function trail(){
-    particles.push({x:player.x, y:player.y, r:player.r*0.8, life:1,
-      c: NEON[(Math.random()*NEON.length)|0]});
-    if(particles.length>60) particles.shift();
-  }
-
-  // --- update ---
   function update(dt){
-    // difficulty naik pelan
-    speed += dt*0.18;
-    score += dt*speed*2.2;
-    elScore.textContent = Math.floor(score);
-
-    gridY = (gridY + speed*1.4) % 40;
-
-    // pemain mengikuti jari (halus)
-    player.x += (player.tx - player.x) * Math.min(1, dt*14);
-    player.x = Math.max(player.r, Math.min(W-player.r, player.x));
+    speed+=dt*.18;score+=dt*speed*2.2;elScore.textContent=Math.floor(score);
+    gridY=(gridY+speed*1.4)%40;
+    player.x+=(player.tx-player.x)*Math.min(1,dt*14);player.x=Math.max(player.r,Math.min(W-player.r,player.x));
     trail();
-
-    // partikel
-    for(let i=particles.length-1;i>=0;i--){
-      const p=particles[i]; p.life -= dt*2.4; p.r *= 0.94;
-      if(p.life<=0) particles.splice(i,1);
-    }
-
-    // spawn
-    spawnT -= dt;
-    const interval = Math.max(0.42, 1.05 - score*0.0009);
-    if(spawnT<=0){ spawn(); spawnT = interval; }
-
-    // rintangan + tabrakan
-    const pr = player.r*0.8; // kotak tabrakan sedikit lebih kecil biar adil
-    for(let i=obstacles.length-1;i>=0;i--){
-      const o=obstacles[i]; o.y += speed*60*dt;
-      // AABB vs lingkaran (didekati kotak)
-      if(player.x+pr>o.x && player.x-pr<o.x+o.w &&
-         player.y+pr>o.y && player.y-pr<o.y+o.h){
-        gameOver(); return;
-      }
-      if(o.y>H){ obstacles.splice(i,1); }
-    }
+    spawnT-=dt;const iv=Math.max(.42,1.05-score*.0009);if(spawnT<=0){spawn();spawnT=iv;}
+    const pr=player.r*.8;
+    for(let i=obstacles.length-1;i>=0;i--){const o=obstacles[i];o.y+=speed*60*dt;
+      if(player.x+pr>o.x&&player.x-pr<o.x+o.w&&player.y+pr>o.y&&player.y-pr<o.y+o.h){gameOver();return;}
+      if(o.y>H)obstacles.splice(i,1);}
+  }
+  function updateAmbient(dt){
+    for(const s of stars){s.y+=s.z*32*dt;if(s.y>H){s.y=0;s.x=Math.random()*W;}}
+    if(state!=='play')gridY=(gridY+30*dt)%40;
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=(p.vx||0)*dt*60;p.y+=(p.vy||0)*dt*60;p.vy+=dt*28;p.life-=dt*1.7;p.r*=.96;if(p.life<=0||p.r<.3)particles.splice(i,1);}
+    if(shake>0){shake*=Math.pow(.001,dt);if(shake<.4)shake=0;}
   }
 
-  // --- gambar ---
-  function roundRect(x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
-  }
-
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
   function draw(){
     ctx.clearRect(0,0,W,H);
-    // latar gradasi
-    const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#0a0e1f'); g.addColorStop(1,'#070912');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-
-    // grid bergerak
-    ctx.strokeStyle='rgba(120,90,255,0.10)'; ctx.lineWidth=1;
-    ctx.beginPath();
-    for(let y=gridY;y<H;y+=40){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
-    for(let x=0;x<W;x+=40){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
-    ctx.stroke();
-
-    // partikel jejak
-    for(const p of particles){
-      ctx.globalAlpha = Math.max(0,p.life)*0.5;
-      ctx.fillStyle = p.c;
-      ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(0,p.r),0,7); ctx.fill();
-    }
-    ctx.globalAlpha=1;
-
-    // rintangan neon
-    for(const o of obstacles){
-      ctx.shadowBlur=16; ctx.shadowColor=o.c; ctx.fillStyle=o.c;
-      roundRect(o.x,o.y,o.w,o.h,6); ctx.fill();
-    }
-    ctx.shadowBlur=0;
-
-    // pemain
-    if(state!=='start'){
-      ctx.shadowBlur=22; ctx.shadowColor='#00f0ff';
-      ctx.fillStyle='#fff';
-      ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,7); ctx.fill();
-      ctx.shadowBlur=0;
-      ctx.fillStyle='#00f0ff';
-      ctx.beginPath(); ctx.arc(player.x,player.y,player.r*0.55,0,7); ctx.fill();
-    }
+    ctx.save();
+    if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a0e1f');g.addColorStop(1,'#070912');ctx.fillStyle=g;ctx.fillRect(-20,-20,W+40,H+40);
+    for(const s of stars){ctx.globalAlpha=.25+s.z*.4;ctx.fillStyle='#cfe8ff';ctx.fillRect(s.x,s.y,s.z*1.4,s.z*1.4);}ctx.globalAlpha=1;
+    ctx.strokeStyle='rgba(120,90,255,0.10)';ctx.lineWidth=1;ctx.beginPath();
+    for(let y=gridY;y<H;y+=40){ctx.moveTo(0,y);ctx.lineTo(W,y);}for(let x=0;x<W;x+=40){ctx.moveTo(x,0);ctx.lineTo(x,H);}ctx.stroke();
+    for(const p of particles){ctx.globalAlpha=Math.max(0,p.life)*.5;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(0,p.r),0,7);ctx.fill();}ctx.globalAlpha=1;
+    for(const o of obstacles){ctx.shadowBlur=16;ctx.shadowColor=o.c;ctx.fillStyle=o.c;rr(o.x,o.y,o.w,o.h,6);ctx.fill();}ctx.shadowBlur=0;
+    if(state!=='start'){const hue=(performance.now()/14)%360,col='hsl('+hue+',100%,62%)';
+      ctx.shadowBlur=24;ctx.shadowColor=col;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,7);ctx.fill();
+      ctx.shadowBlur=0;ctx.fillStyle=col;ctx.beginPath();ctx.arc(player.x,player.y,player.r*.55,0,7);ctx.fill();}
+    ctx.restore();
+    const v=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
   }
 
-  // --- loop utama ---
   function loop(now){
     requestAnimationFrame(loop);
-    if(paused){ last=now; return; }
-    let dt=(now-last)/1000; last=now;
-    if(dt>0.05) dt=0.05;       // cegah lompatan
-    if(state==='play') update(dt);
-    draw();
+    let dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;
+    if(bgHidden)return;
+    if(state==='play')update(dt);
+    updateAmbient(dt);draw();
   }
 
-  // pause saat aplikasi di-background
-  document.addEventListener('visibilitychange', ()=>{ paused = document.hidden; });
+  /* ---------- tombol ---------- */
+  document.getElementById('startBtn').onclick=start;
+  document.getElementById('retryBtn').onclick=start;
+  document.getElementById('pauseBtn').onclick=()=>{if(state==='play'){state='pause';dragging=false;showOnly('pause');pauseMusic();}};
+  document.getElementById('resumeBtn').onclick=()=>{state='play';hideAll();resumeMusic();last=performance.now();};
+  document.getElementById('menuBtn2').onclick=goMenu;
+  document.getElementById('menuBtn3').onclick=goMenu;
+  document.getElementById('exitBtn1').onclick=exitApp;
+  document.getElementById('exitBtn2').onclick=exitApp;
+  document.getElementById('exitBtn3').onclick=exitApp;
+  muteBtn.onclick=toggleMute;
+  document.addEventListener('visibilitychange',()=>{bgHidden=document.hidden;if(document.hidden){if(AC)AC.suspend();}else{if(state!=='pause'&&AC)AC.resume();last=performance.now();}});
 
-  resize();
-  requestAnimationFrame(loop);
+  resize();requestAnimationFrame(loop);
 })();
 </script>
 </body>
