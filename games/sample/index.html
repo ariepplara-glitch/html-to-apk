@@ -1,248 +1,578 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Neon Dodge</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;overflow:hidden;background:#070912;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;color:#fff;touch-action:none;user-select:none}
-  #game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden}
-  canvas{display:block;width:100%;height:100%;touch-action:none;position:absolute;inset:0;z-index:0}
-  #hud{position:absolute;top:0;left:0;right:0;padding:14px 16px;z-index:2;
-    display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;
-    font-weight:700;letter-spacing:1px;text-shadow:0 0 10px rgba(0,255,255,.6)}
-  .stats{display:flex;flex-direction:column;gap:4px}
-  .lbl{font-size:10px;opacity:.6;display:block}
-  .val{font-size:24px}
-  .hi .val{color:#ff4dd8;text-shadow:0 0 10px rgba(255,77,216,.6)}
-  .icons{display:flex;gap:8px}
-  .iconbtn{pointer-events:auto;width:42px;height:42px;border-radius:50%;font-size:18px;
-    border:1px solid rgba(255,255,255,.22);background:rgba(10,14,31,.5);color:#fff;
-    backdrop-filter:blur(4px);cursor:pointer}
-  .iconbtn:active{transform:scale(.9)}
-  .screen{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;gap:12px;
-    align-items:center;justify-content:center;text-align:center;
-    background:rgba(7,9,18,.80);backdrop-filter:blur(5px);padding:24px}
-  .hide{display:none!important}
-  .title{font-size:42px;font-weight:900;letter-spacing:2px;line-height:1.1;
-    background:linear-gradient(90deg,#00f0ff,#b14dff,#ff4dd8);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    filter:drop-shadow(0 0 18px rgba(120,80,255,.5));animation:pulse 2.4s ease-in-out infinite}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-  .sub{opacity:.72;font-size:14px;max-width:280px;line-height:1.5}
-  .big{font-size:54px;font-weight:900;color:#00f0ff;text-shadow:0 0 20px rgba(0,240,255,.6)}
-  .btn{padding:14px 40px;border:0;border-radius:40px;cursor:pointer;min-width:200px;
-    font-size:17px;font-weight:800;letter-spacing:1px;color:#070912;
-    background:linear-gradient(90deg,#00f0ff,#b14dff);
-    box-shadow:0 0 24px rgba(120,80,255,.55);transition:transform .1s}
-  .btn:active{transform:scale(.94)}
-  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.28);color:#fff;box-shadow:none}
-  .hint{font-size:12px;opacity:.5;margin-top:6px}
-  .exithint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:5;
-    background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.15);
-    padding:10px 18px;border-radius:20px;font-size:13px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Pesawat vs Alien</title>
+
+    <style>
+        /* ========== CSS: TAMPILAN GAME ========== */
+        
+        /* Reset & Style Halaman */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a2e;        /* Warna latar hitam kebiruan */
+            display: flex;               /* Flexbox untuk centering */
+            justify-content: center;     /* Tengah horizontal */
+            align-items: center;         /* Tengah vertikal */
+            min-height: 100vh;           /* Tinggi minimal = 100% layar */
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Container Game */
+        .game-container {
+            text-align: center;          /* Teks di tengah */
+            background: #1a1a3e;         /* Latar belakang container */
+            padding: 20px;
+            border-radius: 15px;         /* Sudut melengkung */
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);  /* Cahaya biru */
+        }
+
+        /* Judul Game */
+        h1 {
+            color: #00ffff;              /* Warna cyan */
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px cyan;  /* Efek glow */
+        }
+
+        /* ===== CANVAS: Arena Game ===== */
+        canvas {
+            border: 3px solid #00ffff;   /* Pinggiran cyan */
+            border-radius: 10px;
+            background: #000;            /* Background hitam */
+            display: block;              /* Canvas sebagai block */
+            margin: 0 auto;              /* Tengah */
+            cursor: none;                /* Sembunyikan kursor */
+        }
+
+        /* Panel Informasi */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;  /* Kiri vs Kanan */
+            align-items: center;
+            margin-top: 15px;
+            color: white;
+            font-size: 18px;
+            padding: 10px 20px;
+            background: #0d0d30;
+            border-radius: 8px;
+        }
+
+        /* Skor */
+        #scoreDisplay {
+            color: #00ff88;              /* Hijau terang */
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        /* Tombol Restart */
+        #restartBtn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #restartBtn:hover {
+            background: #ff6666;
+            transform: scale(1.05);      /* Efek membesar */
+        }
+
+        /* Petunjuk Keyboard */
+        .controls {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .controls span {
+            background: #333;
+            padding: 3px 10px;
+            border-radius: 4px;
+            color: #00ffff;
+            margin: 0 3px;
+        }
+    </style>
 </head>
 <body>
-<div id="game">
-  <canvas id="cv"></canvas>
 
-  <div id="hud">
-    <div class="stats">
-      <div class="sc"><span class="lbl">SKOR</span><span class="val" id="score">0</span></div>
-      <div class="hi"><span class="lbl">TERBAIK</span><span class="val" id="best">0</span></div>
+    <div class="game-container">
+        <!-- Judul -->
+        <h1>🚀 PESAWAT vs 👾 ALIEN</h1>
+
+        <!-- ===== CANVAS: Tempat game digambar ===== -->
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <!-- Panel Info: Skor & Restart -->
+        <div class="info-panel">
+            <div>
+                💥 Skor: <span id="scoreDisplay">0</span>
+            </div>
+            <button id="restartBtn">🔄 Mulai Ulang</button>
+        </div>
+
+        <!-- Petunjuk Keyboard -->
+        <div class="controls">
+            <span>←</span> <span>→</span> Gerak &nbsp;|&nbsp; <span>Spasi</span> Tembak
+        </div>
     </div>
-    <div class="icons">
-      <button class="iconbtn" id="muteBtn" aria-label="mute">🔊</button>
-      <button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button>
-    </div>
-  </div>
 
-  <div class="screen" id="startScr">
-    <div class="title">NEON<br>DODGE</div>
-    <div class="sub">Geser jarimu untuk menggerakkan bola. Hindari rintangan neon yang jatuh!</div>
-    <button class="btn" id="startBtn">MULAI</button>
-    <button class="btn ghost" id="exitBtn1">KELUAR</button>
-    <div class="hint">Sentuh & geser • ada musik 🎵 & pause ⏸</div>
-  </div>
+    <!-- ============================================================ -->
+    <!-- ===== JAVASCRIPT: LOGIKA GAME LENGKAP ===== -->
+    <!-- ============================================================ -->
 
-  <div class="screen hide" id="pauseScr">
-    <div class="title" style="font-size:34px">PAUSED</div>
-    <button class="btn" id="resumeBtn">LANJUT</button>
-    <button class="btn ghost" id="menuBtn2">KE MENU</button>
-    <button class="btn ghost" id="exitBtn2">KELUAR</button>
-  </div>
+    <script>
+        // ============================================================
+        // BAGIAN 1: AMBIL ELEMEN DARI HTML
+        // ============================================================
 
-  <div class="screen hide" id="overScr">
-    <div class="title" style="font-size:30px">GAME OVER</div>
-    <div class="sub">Skor kamu</div>
-    <div class="big" id="finalScore">0</div>
-    <div class="sub" id="newBest" style="color:#ff4dd8">🏆 REKOR BARU!</div>
-    <button class="btn" id="retryBtn">MAIN LAGI</button>
-    <button class="btn ghost" id="menuBtn3">KE MENU</button>
-    <button class="btn ghost" id="exitBtn3">KELUAR</button>
-  </div>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');   // Context 2D untuk menggambar
+        const scoreSpan = document.getElementById('scoreDisplay');
+        const restartBtn = document.getElementById('restartBtn');
 
-  <div class="exithint hide" id="exitHint">Tekan tombol ◀ Back di HP untuk keluar</div>
-</div>
+        // ============================================================
+        // BAGIAN 2: UKURAN DAN KONSTANTA GAME
+        // ============================================================
 
-<script>
-(function(){
-  const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-  const elScore=document.getElementById('score'), elBest=document.getElementById('best');
-  const screens={start:document.getElementById('startScr'),pause:document.getElementById('pauseScr'),over:document.getElementById('overScr')};
-  const finalScore=document.getElementById('finalScore'), newBest=document.getElementById('newBest');
-  const exitHint=document.getElementById('exitHint'), muteBtn=document.getElementById('muteBtn');
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 500;
 
-  let W=0,H=0,dpr=1;
-  const NEON=['#00f0ff','#b14dff','#ff4dd8','#39ff14','#ffe600'];
-  let state='start', score=0, best=0, speed=0, gridY=0, spawnT=0, shake=0, bgHidden=false;
-  let obstacles=[], particles=[], stars=[];
-  let player={x:0,y:0,r:14,tx:0}, last=0;
+        // Ukuran pesawat
+        const PLAYER_WIDTH = 40;
+        const PLAYER_HEIGHT = 40;
+        const PLAYER_SPEED = 7;             // Kecepatan gerak
 
-  try{ best=parseInt(localStorage.getItem('neonDodgeBest')||'0',10)||0; }catch(e){}
-  elBest.textContent=best;
+        // Ukuran alien
+        const ALIEN_SIZE = 35;
+        const ALIEN_SPEED = 1.5;            // Kecepatan turun
+        const ALIEN_SPAWN_RATE = 0.02;      // Peluang spawn per frame
 
-  /* ---------- canvas ---------- */
-  function resize(){
-    dpr=Math.min(window.devicePixelRatio||1,2);
-    W=cv.clientWidth; H=cv.clientHeight;
-    cv.width=Math.floor(W*dpr); cv.height=Math.floor(H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    player.y=H-90; if(!player.x){player.x=W/2;player.tx=W/2;}
-    player.x=Math.max(player.r,Math.min(W-player.r,player.x));
-    if(!stars.length) for(let i=0;i<46;i++) stars.push({x:Math.random()*W,y:Math.random()*H,z:.3+Math.random()*1.2});
-  }
-  window.addEventListener('resize',resize);
+        // Ukuran bullet (laser)
+        const BULLET_WIDTH = 4;
+        const BULLET_HEIGHT = 15;
+        const BULLET_SPEED = 8;             // Kecepatan naik
 
-  /* ---------- kontrol ---------- */
-  let dragging=false;
-  const px=e=>e.clientX-cv.getBoundingClientRect().left;
-  cv.addEventListener('pointerdown',e=>{if(state==='play'){dragging=true;player.tx=px(e);}});
-  cv.addEventListener('pointermove',e=>{if(dragging&&state==='play'){player.tx=px(e);e.preventDefault();}},{passive:false});
-  window.addEventListener('pointerup',()=>dragging=false);
+        // ============================================================
+        // BAGIAN 3: VARIABEL GAME (STATE)
+        // ============================================================
 
-  /* ---------- layar ---------- */
-  function showOnly(k){for(const s in screens)screens[s].classList.add('hide');if(k)screens[k].classList.remove('hide');}
-  function hideAll(){for(const s in screens)screens[s].classList.add('hide');}
+        let player = {
+            x: CANVAS_WIDTH / 2 - PLAYER_WIDTH / 2,   // Posisi awal: tengah
+            y: CANVAS_HEIGHT - PLAYER_HEIGHT - 20,     // Dekat bawah
+            width: PLAYER_WIDTH,
+            height: PLAYER_HEIGHT,
+            speed: PLAYER_SPEED
+        };
 
-  /* ---------- musik synthwave (Web Audio, tanpa file) ---------- */
-  let AC=null,master=null,started=false,muted=false,sched=null,nextNote=0,tick=0,noiseBuf=null;
-  const BPM=124, SIX=(60/BPM)/4;
-  const BASS=[110,87.31,130.81,98], PENTA=[220,261.63,293.66,329.63,392,440,523.25];
-  function env(g,t,peak,dur){g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(peak,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);}
-  function voice(freq,t,dur,type,peak,flt){
-    const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);
-    let node=o; if(flt){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=flt;o.connect(f);node=f;}
-    node.connect(g);g.connect(master);env(g,t,peak,dur);o.start(t);o.stop(t+dur+.05);
-  }
-  function kick(t){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+.12);g.connect(master);env(g,t,.85,.2);o.start(t);o.stop(t+.25);}
-  function hat(t){const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=7000;const g=AC.createGain();s.connect(f);f.connect(g);g.connect(master);env(g,t,.12,.05);s.start(t);s.stop(t+.06);}
-  function scheduleStep(n,t){
-    const s=n%16, bar=Math.floor(n/16)%4;
-    if(s%4===0)kick(t);
-    if(s%4===2)hat(t);
-    if(s===0||s===8)voice(BASS[bar],t,.3,'sawtooth',.35,1000);
-    if(s%2===0)voice(PENTA[(n*3+bar)%PENTA.length],t,.18,'triangle',.2);
-  }
-  function scheduler(){if(!AC)return;while(nextNote<AC.currentTime+.12){scheduleStep(tick,nextNote);nextNote+=SIX;tick++;}}
-  function startAudio(){
-    if(started)return;const WAC=window.AudioContext||window.webkitAudioContext;if(!WAC)return;
-    AC=new WAC();master=AC.createGain();master.gain.value=muted?0:.55;
-    const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=16000;
-    const dl=AC.createDelay();dl.delayTime.value=SIX*6;const fb=AC.createGain();fb.gain.value=.26;const wet=AC.createGain();wet.gain.value=.3;
-    master.connect(lp);lp.connect(AC.destination);master.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(lp);
-    noiseBuf=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    nextNote=AC.currentTime+.1;tick=0;sched=setInterval(scheduler,25);started=true;
-  }
-  function pauseMusic(){if(AC&&AC.state==='running')AC.suspend();}
-  function resumeMusic(){if(AC&&AC.state==='suspended')AC.resume();}
-  function toggleMute(){muted=!muted;if(master)master.gain.setValueAtTime(muted?0:.16,AC.currentTime);muteBtn.textContent=muted?'🔇':'🔊';}
+        let bullets = [];       // Array untuk menyimpan semua peluru
+        let aliens = [];        // Array untuk menyimpan semua alien
+        let score = 0;          // Skor awal
+        let gameOver = false;   // Status game over
+        let gameLoopId = null;  // ID untuk animasi loop
 
-  /* ---------- gameplay ---------- */
-  function start(){
-    score=0;speed=3.2;gridY=0;spawnT=0;obstacles=[];particles=[];shake=0;
-    player.x=W/2;player.tx=W/2;player.y=H-90;dragging=false;
-    state='play';hideAll();startAudio();resumeMusic();last=performance.now();
-  }
-  function goMenu(){state='start';dragging=false;showOnly('start');}
-  function explosion(){for(let i=0;i<40;i++){const a=Math.random()*6.28,sp=2+Math.random()*6;particles.push({x:player.x,y:player.y,r:3+Math.random()*4,life:1,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,c:NEON[(Math.random()*NEON.length)|0]});}}
-  function gameOver(){
-    state='over';shake=16;explosion();const s=Math.floor(score);finalScore.textContent=s;
-    if(s>best){best=s;try{localStorage.setItem('neonDodgeBest',String(best));}catch(e){}elBest.textContent=best;newBest.style.display='block';}
-    else newBest.style.display='none';
-    showOnly('over');
-  }
-  function exitApp(){
-    if(window.Android&&typeof window.Android.exitApp==='function'){window.Android.exitApp();return;}
-    try{window.close();}catch(e){}
-    exitHint.classList.remove('hide');setTimeout(()=>exitHint.classList.add('hide'),2500);
-  }
+        // ============================================================
+        // BAGIAN 4: INPUT KEYBOARD
+        // ============================================================
 
-  function spawn(){const w=40+Math.random()*90;obstacles.push({x:Math.random()*(W-w),y:-30,w:w,h:18+Math.random()*16,c:NEON[(Math.random()*NEON.length)|0]});}
-  function trail(){particles.push({x:player.x,y:player.y,r:player.r*.8,life:1,vx:0,vy:0,c:NEON[(Math.random()*NEON.length)|0]});if(particles.length>90)particles.shift();}
+        const keys = {
+            left: false,
+            right: false,
+            space: false
+        };
 
-  function update(dt){
-    speed+=dt*.18;score+=dt*speed*2.2;elScore.textContent=Math.floor(score);
-    gridY=(gridY+speed*1.4)%40;
-    player.x+=(player.tx-player.x)*Math.min(1,dt*14);player.x=Math.max(player.r,Math.min(W-player.r,player.x));
-    trail();
-    spawnT-=dt;const iv=Math.max(.42,1.05-score*.0009);if(spawnT<=0){spawn();spawnT=iv;}
-    const pr=player.r*.8;
-    for(let i=obstacles.length-1;i>=0;i--){const o=obstacles[i];o.y+=speed*60*dt;
-      if(player.x+pr>o.x&&player.x-pr<o.x+o.w&&player.y+pr>o.y&&player.y-pr<o.y+o.h){gameOver();return;}
-      if(o.y>H)obstacles.splice(i,1);}
-  }
-  function updateAmbient(dt){
-    for(const s of stars){s.y+=s.z*32*dt;if(s.y>H){s.y=0;s.x=Math.random()*W;}}
-    if(state!=='play')gridY=(gridY+30*dt)%40;
-    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=(p.vx||0)*dt*60;p.y+=(p.vy||0)*dt*60;p.vy+=dt*28;p.life-=dt*1.7;p.r*=.96;if(p.life<=0||p.r<.3)particles.splice(i,1);}
-    if(shake>0){shake*=Math.pow(.001,dt);if(shake<.4)shake=0;}
-  }
+        // --- Event: Tombol ditekan ---
+        document.addEventListener('keydown', function(e) {
+            if (gameOver) return;   // Jika game over, abaikan input
 
-  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    ctx.save();
-    if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
-    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a0e1f');g.addColorStop(1,'#070912');ctx.fillStyle=g;ctx.fillRect(-20,-20,W+40,H+40);
-    for(const s of stars){ctx.globalAlpha=.25+s.z*.4;ctx.fillStyle='#cfe8ff';ctx.fillRect(s.x,s.y,s.z*1.4,s.z*1.4);}ctx.globalAlpha=1;
-    ctx.strokeStyle='rgba(120,90,255,0.10)';ctx.lineWidth=1;ctx.beginPath();
-    for(let y=gridY;y<H;y+=40){ctx.moveTo(0,y);ctx.lineTo(W,y);}for(let x=0;x<W;x+=40){ctx.moveTo(x,0);ctx.lineTo(x,H);}ctx.stroke();
-    for(const p of particles){ctx.globalAlpha=Math.max(0,p.life)*.5;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(0,p.r),0,7);ctx.fill();}ctx.globalAlpha=1;
-    for(const o of obstacles){ctx.shadowBlur=16;ctx.shadowColor=o.c;ctx.fillStyle=o.c;rr(o.x,o.y,o.w,o.h,6);ctx.fill();}ctx.shadowBlur=0;
-    if(state!=='start'){const hue=(performance.now()/14)%360,col='hsl('+hue+',100%,62%)';
-      ctx.shadowBlur=24;ctx.shadowColor=col;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,7);ctx.fill();
-      ctx.shadowBlur=0;ctx.fillStyle=col;ctx.beginPath();ctx.arc(player.x,player.y,player.r*.55,0,7);ctx.fill();}
-    ctx.restore();
-    const v=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
-  }
+            if (e.key === 'ArrowLeft' || e.key === 'Left' || e.key === 'a') {
+                keys.left = true;
+                e.preventDefault();   // Cegah scroll halaman
+            }
+            if (e.key === 'ArrowRight' || e.key === 'Right' || e.key === 'd') {
+                keys.right = true;
+                e.preventDefault();
+            }
+            if (e.key === ' ') {        // Spasi = tembak
+                keys.space = true;
+                e.preventDefault();
+                shootBullet();          // Panggil fungsi tembak
+            }
+        });
 
-  function loop(now){
-    requestAnimationFrame(loop);
-    let dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;
-    if(bgHidden)return;
-    if(state==='play')update(dt);
-    updateAmbient(dt);draw();
-  }
+        // --- Event: Tombol dilepas ---
+        document.addEventListener('keyup', function(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'Left' || e.key === 'a') {
+                keys.left = false;
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowRight' || e.key === 'Right' || e.key === 'd') {
+                keys.right = false;
+                e.preventDefault();
+            }
+            if (e.key === ' ') {
+                keys.space = false;
+                e.preventDefault();
+            }
+        });
 
-  /* ---------- tombol ---------- */
-  document.getElementById('startBtn').onclick=start;
-  document.getElementById('retryBtn').onclick=start;
-  document.getElementById('pauseBtn').onclick=()=>{if(state==='play'){state='pause';dragging=false;showOnly('pause');pauseMusic();}};
-  document.getElementById('resumeBtn').onclick=()=>{state='play';hideAll();resumeMusic();last=performance.now();};
-  document.getElementById('menuBtn2').onclick=goMenu;
-  document.getElementById('menuBtn3').onclick=goMenu;
-  document.getElementById('exitBtn1').onclick=exitApp;
-  document.getElementById('exitBtn2').onclick=exitApp;
-  document.getElementById('exitBtn3').onclick=exitApp;
-  muteBtn.onclick=toggleMute;
-  document.addEventListener('visibilitychange',()=>{bgHidden=document.hidden;if(document.hidden){if(AC)AC.suspend();}else{if(state!=='pause'&&AC)AC.resume();last=performance.now();}});
+        // ============================================================
+        // BAGIAN 5: FUNGSI-FUNGSI GAME
+        // ============================================================
 
-  resize();requestAnimationFrame(loop);
-})();
-</script>
+        /**
+         * FUNGSI: Menembakkan peluru/laser
+         * Membuat bullet baru di posisi depan pesawat
+         */
+        function shootBullet() {
+            // Buat objek bullet baru
+            let bullet = {
+                x: player.x + player.width / 2 - BULLET_WIDTH / 2,  // Tengah pesawat
+                y: player.y - BULLET_HEIGHT,                         // Depan pesawat
+                width: BULLET_WIDTH,
+                height: BULLET_HEIGHT,
+                speed: BULLET_SPEED
+            };
+            bullets.push(bullet);   // Tambahkan ke array bullets
+        }
+
+        /**
+         * FUNGSI: Membuat alien baru
+         * Alien muncul di posisi X acak di bagian atas
+         */
+        function spawnAlien() {
+            let alien = {
+                x: Math.random() * (CANVAS_WIDTH - ALIEN_SIZE),   // Posisi X acak
+                y: -ALIEN_SIZE,                                     // Mulai dari atas canvas
+                size: ALIEN_SIZE,
+                speed: ALIEN_SPEED + Math.random() * 0.5,           // Kecepatan bervariasi
+                // Warna acak antara hijau, ungu, merah, oranye
+                color: ['#33ff33', '#ff33ff', '#ff4444', '#ffaa00'][Math.floor(Math.random() * 4)]
+            };
+            aliens.push(alien);
+        }
+
+        /**
+         * FUNGSI: Deteksi tabrakan (collision detection)
+         * Menggunakan metode Axis-Aligned Bounding Box (AABB)
+         * Dua objek bertabrakan jika kotak mereka saling tumpang tindih
+         */
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        /**
+         * FUNGSI: Update skor di layar
+         */
+        function updateScoreDisplay() {
+            scoreSpan.textContent = score;
+        }
+
+        // ============================================================
+        // BAGIAN 6: FUNGSI GAME LOOP (JANTUNG GAME)
+        // ============================================================
+
+        function gameLoop() {
+            if (gameOver) {
+                return;   // Hentikan loop jika game over
+            }
+
+            // ===== A. UPDATE (Logika) =====
+
+            // 1. Gerakkan pesawat berdasarkan input keyboard
+            if (keys.left && player.x > 0) {
+                player.x -= player.speed;    // Geser ke kiri
+            }
+            if (keys.right && player.x < CANVAS_WIDTH - player.width) {
+                player.x += player.speed;    // Geser ke kanan
+            }
+
+            // 2. Gerakkan bullets ke atas
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;   // Naik ke atas
+
+                // Hapus bullet yang sudah keluar layar
+                if (bullets[i].y + bullets[i].height < 0) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // 3. Gerakkan alien ke bawah
+            for (let i = aliens.length - 1; i >= 0; i--) {
+                aliens[i].y += aliens[i].speed;     // Turun ke bawah
+
+                // Hapus alien yang sudah keluar layar (lewat bawah)
+                if (aliens[i].y > CANVAS_HEIGHT) {
+                    aliens.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // 4. Cek tabrakan: Bullet vs Alien
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                for (let j = aliens.length - 1; j >= 0; j--) {
+                    // Buat objek rect untuk deteksi tabrakan
+                    let bulletRect = {
+                        x: bullets[i].x,
+                        y: bullets[i].y,
+                        width: bullets[i].width,
+                        height: bullets[i].height
+                    };
+                    let alienRect = {
+                        x: aliens[j].x,
+                        y: aliens[j].y,
+                        width: aliens[j].size,
+                        height: aliens[j].size
+                    };
+
+                    if (checkCollision(bulletRect, alienRect)) {
+                        // Tabrakan! Hancurkan bullet dan alien
+                        bullets.splice(i, 1);
+                        aliens.splice(j, 1);
+                        score += 10;                // Tambah skor
+                        updateScoreDisplay();
+                        break;                      // Keluar dari loop dalam
+                    }
+                }
+            }
+
+            // 5. Cek tabrakan: Alien vs Player (Game Over)
+            for (let i = 0; i < aliens.length; i++) {
+                let playerRect = {
+                    x: player.x,
+                    y: player.y,
+                    width: player.width,
+                    height: player.height
+                };
+                let alienRect = {
+                    x: aliens[i].x,
+                    y: aliens[i].y,
+                    width: aliens[i].size,
+                    height: aliens[i].size
+                };
+
+                if (checkCollision(playerRect, alienRect)) {
+                    gameOver = true;    // Game Over!
+                    break;
+                }
+            }
+
+            // 6. Spawn alien baru secara random
+            if (Math.random() < ALIEN_SPAWN_RATE) {
+                spawnAlien();
+            }
+
+            // ===== B. RENDER (Menggambar) =====
+
+            // Hapus semua gambar sebelumnya
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            // --- Gambar Background: Langit malam berbintang ---
+            // Gradasi langit
+            let gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+            gradient.addColorStop(0, '#000033');    // Biru gelap di atas
+            gradient.addColorStop(1, '#0a0a2e');    // Biru kehitaman di bawah
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            // Bintang-bintang acak (digambar ulang tiap frame)
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 60; i++) {
+                let starX = (i * 37 + 13) % CANVAS_WIDTH;
+                let starY = (i * 53 + 7) % CANVAS_HEIGHT;
+                let starSize = 1 + (i % 3);
+                ctx.beginPath();
+                ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // --- Gambar Player: Pesawat berbentuk segitiga ---
+            const px = player.x;
+            const py = player.y;
+            const pw = player.width;
+            const ph = player.height;
+
+            // Badan pesawat (segitiga)
+            ctx.fillStyle = '#00ddff';   // Biru terang
+            ctx.beginPath();
+            ctx.moveTo(px + pw/2, py);                  // Ujung atas (hidung pesawat)
+            ctx.lineTo(px + pw - 5, py + ph);            // Kanan bawah
+            ctx.lineTo(px + 5, py + ph);                 // Kiri bawah
+            ctx.closePath();
+            ctx.fill();
+
+            // Kokpit (lingkaran kecil)
+            ctx.fillStyle = '#88ffff';
+            ctx.beginPath();
+            ctx.arc(px + pw/2, py + 10, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Api di belakang pesawat
+            ctx.fillStyle = '#ff6600';
+            ctx.beginPath();
+            ctx.moveTo(px + pw/2 - 8, py + ph);
+            ctx.lineTo(px + pw/2, py + ph + 12);
+            ctx.lineTo(px + pw/2 + 8, py + ph);
+            ctx.closePath();
+            ctx.fill();
+
+            // --- Gambar Aliens: Bentuk bulat dengan mata ---
+            for (let alien of aliens) {
+                const ax = alien.x;
+                const ay = alien.y;
+                const as = alien.size;
+
+                // Badan alien (lingkaran)
+                ctx.fillStyle = alien.color;
+                ctx.beginPath();
+                ctx.arc(ax + as/2, ay + as/2, as/2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Outline
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Mata (2 lingkaran putih)
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(ax + as/2 - 6, ay + as/2 - 4, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(ax + as/2 + 6, ay + as/2 - 4, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupil (lingkaran hitam)
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(ax + as/2 - 6, ay + as/2 - 4, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(ax + as/2 + 6, ay + as/2 - 4, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Mulut (garis)
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(ax + as/2, ay + as/2 + 4, 6, 0, Math.PI);
+                ctx.stroke();
+            }
+
+            // --- Gambar Bullets: Laser kuning ---
+            for (let bullet of bullets) {
+                // Laser outer (kuning terang)
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+
+                // Efek glow (kuning lebih terang)
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                ctx.shadowBlur = 0;   // Reset shadow
+            }
+
+            // --- Jika Game Over, tampilkan teks ---
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';   // Layer gelap semi-transparan
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                ctx.fillStyle = '#ff4444';
+                ctx.font = 'bold 50px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('💀 GAME OVER 💀', CANVAS_WIDTH/2, CANVAS_HEIGHT/2 - 30);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '24px Courier New';
+                ctx.fillText('Skor Akhir: ' + score, CANVAS_WIDTH/2, CANVAS_HEIGHT/2 + 30);
+
+                ctx.fillStyle = '#aaaaaa';
+                ctx.font = '16px Courier New';
+                ctx.fillText('Tekan "Mulai Ulang" untuk main lagi', CANVAS_WIDTH/2, CANVAS_HEIGHT/2 + 80);
+            }
+
+            // ===== C. LOOP LAGI =====
+            gameLoopId = requestAnimationFrame(gameLoop);   // Panggil fungsi ini lagi
+        }
+
+        // ============================================================
+        // BAGIAN 7: FUNGSI RESTART / RESET GAME
+        // ============================================================
+
+        function resetGame() {
+            // Hentikan game loop yang sedang berjalan
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
+
+            // Reset semua variabel ke awal
+            player.x = CANVAS_WIDTH / 2 - PLAYER_WIDTH / 2;
+            player.y = CANVAS_HEIGHT - PLAYER_HEIGHT - 20;
+
+            bullets = [];
+            aliens = [];
+            score = 0;
+            gameOver = false;
+
+            // Reset input keyboard
+            keys.left = false;
+            keys.right = false;
+            keys.space = false;
+
+            // Update tampilan skor
+            updateScoreDisplay();
+
+            // Mulai game loop lagi
+            gameLoop();
+        }
+
+        // ============================================================
+        // BAGIAN 8: EVENT LISTENER RESTART
+        // ============================================================
+
+        restartBtn.addEventListener('click', resetGame);
+
+        // ============================================================
+        // BAGIAN 9: MULAI GAME!
+        // ============================================================
+
+        updateScoreDisplay();   // Tampilkan skor awal (0)
+        gameLoop();             // Mulai game loop!
+
+        // ============================================================
+        // PENJELASAN ALUR GAME:
+        // ============================================================
+        // 1. Program dimulai → panggil gameLoop()
+        // 2. gameLoop() berjalan terus (~60 FPS) sampai gameOver = true
+        // 3. Setiap loop:
+        //    a. Baca input keyboard (kiri/kanan/spasi)
+        //    b. Update posisi player, bullets, aliens
+        //    c. Cek tabrakan (bullet-alien & alien-player)
+        //    d. Generate alien baru (acak)
+        //    e. Gambar ulang semua objek di canvas
+        // 4. Jika game over → tampilkan teks merah
+        // 5. Klik "Mulai Ulang" → resetGame() → mulai lagi dari awal
+        // ============================================================
+
+        console.log('🚀 Game Pesawat vs Alien sudah berjalan!');
+        console.log('🕹️  Gunakan ← → untuk gerak, Spasi untuk tembak!');
+    </script>
+
 </body>
 </html>
