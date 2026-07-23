@@ -144,14 +144,14 @@
     const s=n%16, bar=Math.floor(n/16)%4;
     if(s%4===0)kick(t);
     if(s%4===2)hat(t);
-    if(s===0||s===8)voice(BASS[bar],t,.3,'sawtooth',.22,650);
-    if(s%2===0)voice(PENTA[(n*3+bar)%PENTA.length],t,.18,'triangle',.10);
+    if(s===0||s===8)voice(BASS[bar],t,.3,'sawtooth',.35,1000);
+    if(s%2===0)voice(PENTA[(n*3+bar)%PENTA.length],t,.18,'triangle',.2);
   }
   function scheduler(){if(!AC)return;while(nextNote<AC.currentTime+.12){scheduleStep(tick,nextNote);nextNote+=SIX;tick++;}}
   function startAudio(){
     if(started)return;const WAC=window.AudioContext||window.webkitAudioContext;if(!WAC)return;
-    AC=new WAC();master=AC.createGain();master.gain.value=muted?0:.16;
-    const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=6500;
+    AC=new WAC();master=AC.createGain();master.gain.value=muted?0:.55;
+    const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=16000;
     const dl=AC.createDelay();dl.delayTime.value=SIX*6;const fb=AC.createGain();fb.gain.value=.26;const wet=AC.createGain();wet.gain.value=.3;
     master.connect(lp);lp.connect(AC.destination);master.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(lp);
     noiseBuf=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
