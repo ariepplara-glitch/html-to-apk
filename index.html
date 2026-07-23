@@ -5,90 +5,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HTML → APK Studio</title>
 <style>
-  :root{
-    --accent:#6C5CE7;
-    --bg:#0f1117; --card:#1a1d27; --line:#2a2e3a;
-    --txt:#e8eaf0; --mut:#9aa3b2;
-  }
+  :root{ --accent:#6C5CE7; --bg:#0f1117; --card:#1a1d27; --line:#2a2e3a; --txt:#e8eaf0; --mut:#9aa3b2; }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;padding:16px}
   .wrap{max-width:760px;margin:0 auto}
   header{text-align:center;padding:18px 0 8px}
-  header h1{font-size:24px}
-  header h1 span{color:var(--accent)}
+  header h1{font-size:24px} header h1 span{color:var(--accent)}
   header p{color:var(--mut);font-size:13px;margin-top:4px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
   .card h2{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .badge{font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px}
   label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
-  input[type=text],input[type=color]{width:100%;background:#0f1117;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px;font-size:14px}
+  input[type=text],input[type=password],input[type=color]{width:100%;background:#0f1117;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px;font-size:14px}
   input[type=color]{height:42px;padding:4px;cursor:pointer}
-  .row{display:flex;gap:10px}
-  .row>div{flex:1}
+  .row{display:flex;gap:10px} .row>div{flex:1}
   .drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--mut);cursor:pointer}
-  .drop.on{border-color:var(--accent);color:var(--txt)}
-  .drop b{color:var(--accent)}
+  .drop.on{border-color:var(--accent);color:var(--txt)} .drop b{color:var(--accent)}
   #fileIn{display:none}
-  /* preview phone */
   .phone{margin:8px auto 0;max-width:300px;border:8px solid #000;border-radius:26px;overflow:hidden;background:#000;box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .phone .bar{background:var(--accent);color:#fff;font-size:12px;padding:7px 12px;display:flex;justify-content:space-between}
   .phone iframe{width:100%;height:380px;border:0;background:#fff;display:block}
   .btns{display:flex;flex-direction:column;gap:10px;margin-top:6px}
-  button,.btn{border:0;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block}
+  button,.btn{border:0;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block;width:100%}
   .btn-primary{background:var(--accent);color:#fff}
   .btn-ghost{background:#232734;color:var(--txt);border:1px solid var(--line)}
-  .btn:active{transform:scale(.98)}
-  ol{margin-left:18px;font-size:13px;color:var(--mut)}
-  ol li{margin:6px 0}
-  code{background:#0f1117;border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:var(--accent);font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
   .note{font-size:12px;color:var(--mut);background:#11141c;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
-  .ok{color:#2ecc71}
+  .ok{color:#2ecc71} .slug{font-size:12px;color:var(--mut);margin-top:6px}
+  code{background:#0f1117;border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:var(--accent);font-size:12px}
+  #log{background:#0a0c11;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:12px;font-family:ui-monospace,monospace;white-space:pre-wrap;min-height:60px;margin-top:10px;color:#cfd6e4}
+  .status{font-size:12px;margin-top:8px}
   footer{text-align:center;color:var(--mut);font-size:12px;padding:18px 0}
-  .slug{font-size:12px;color:var(--mut);margin-top:6px}
+  .hidden{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <header>
     <h1>⚡ HTML → <span>APK Studio</span></h1>
-    <p>Control Panel • dibuat oleh Bosquh 🚀</p>
+    <p>1‑Klik Builder • by Bosquh 🚀</p>
   </header>
 
-  <div class="note">
-    🟢 <b>Mode: Control Panel (aman, tanpa token).</b> Web ini = kokpit.
-    Mesin build ada di GitHub Actions. Tombol “Build” di bawah = 1 klik ke mesin itu.
+  <!-- 0 TOKEN -->
+  <div class="card">
+    <h2>🔑 0. Token GitHub <span class="badge">sekali isi</span></h2>
+    <label>Fine‑grained token (scope: repo ini saja)</label>
+    <input type="password" id="token" placeholder="github_pat_...">
+    <div class="btns" style="margin-top:10px">
+      <button class="btn btn-ghost" id="saveToken">💾 Simpan Token</button>
+    </div>
+    <p class="status" id="tokenStatus">Belum ada token.</p>
+    <p class="note">Token disimpan cuma di browser kamu (localStorage), tidak di‑commit ke repo. Cara bikinnya ada di bawah halaman.</p>
   </div>
 
   <!-- 1 UPLOAD -->
   <div class="card">
     <h2>📤 1. Upload File HTML <span class="badge">game kamu</span></h2>
-    <div class="drop" id="drop">
-      📁 Klik atau tarik file <b>.html</b> ke sini<br>
-      <small id="fname">belum ada file</small>
-    </div>
+    <div class="drop" id="drop">📁 Klik / tarik file <b>.html</b> ke sini<br><small id="fname">belum ada file</small></div>
     <input type="file" id="fileIn" accept=".html,.htm">
+    <p class="note">⚠️ Versi ini support <b>1 file HTML self‑contained</b> (CSS/JS inline). Game multi‑file = upgrade lanjutan.</p>
   </div>
 
   <!-- 2 CONFIG -->
   <div class="card">
-    <h2>⚙️ 2. Konfigurasi Aplikasi</h2>
-    <label>Nama Aplikasi</label>
+    <h2>⚙️ 2. Konfigurasi</h2>
+    <label>Nama Aplikasi (jadi nama APK)</label>
     <input type="text" id="appName" value="Game Pertamaku">
     <div class="row">
-      <div>
-        <label>Package ID</label>
-        <input type="text" id="pkgId" value="com.agunpu.game">
-      </div>
-      <div>
-        <label>Versi</label>
-        <input type="text" id="ver" value="1.0.0">
-      </div>
+      <div><label>Package ID</label><input type="text" id="pkgId" value="com.agunpu.game"></div>
+      <div><label>Versi</label><input type="text" id="ver" value="1.0.0"></div>
     </div>
     <label>Warna Tema</label>
     <input type="color" id="theme" value="#6C5CE7">
-    <p class="slug">💡 Saran folder di repo: <code id="slug">game-pertamaku</code> (buat folder <code>games/&lt;slug&gt;/</code> lalu taruh HTML kamu di sana)</p>
-    <p class="note">⚠️ Package ID, Versi & Warna saat ini ngaruh ke <b>Preview</b>. Biar ikut otomatis ke APK = fitur Level 2 (token).</p>
+    <p class="slug">💡 Game akan di‑commit ke <code>games/<span id="slug">game-pertamaku</span>/index.html</code></p>
+    <p class="note">⚠️ Saat ini <b>Nama Aplikasi</b> yang ikut ke APK. Package ID/Versi/Warna masih preview (ikut ke APK = upgrade lanjutan).</p>
   </div>
 
   <!-- 3 PREVIEW -->
@@ -100,94 +90,154 @@
     </div>
   </div>
 
-  <!-- 4 ACTIONS -->
+  <!-- 4 BUILD -->
   <div class="card">
-    <h2>🚀 4. Aksi</h2>
+    <h2>🚀 4. Build APK (1 Klik)</h2>
     <div class="btns">
-      <a class="btn btn-primary" id="buildBtn" target="_blank"
-         href="https://github.com/ariepplara-glitch/html-to-apk/actions/workflows/build.yml">
-        🔨 Build APK via GitHub Actions
-      </a>
-      <button class="btn btn-ghost" id="dlBtn">📥 Download HTML (siap push ke repo)</button>
-      <button class="btn btn-ghost" id="copyBtn">📋 Copy langkah build</button>
+      <button class="btn btn-primary" id="buildBtn">🔨 BUILD APK SEKARANG</button>
+      <button class="btn btn-ghost hidden" id="dlApk">📥 Download APK (zip)</button>
+      <a class="btn btn-ghost hidden" id="manualBtn" target="_blank">🔗 Buka halaman build (download manual)</a>
     </div>
-    <p class="note" id="toast"></p>
+    <pre id="log">Menunggu perintah…</pre>
   </div>
 
-  <!-- 5 GUIDE -->
+  <!-- GUIDE TOKEN -->
   <div class="card">
-    <h2>✅ Cara Build (yang BENAR)</h2>
-    <ol>
-      <li>Push game HTML kamu ke folder <code>games/&lt;slug&gt;/</code> di repo (file utama wajib <code>index.html</code>).</li>
-      <li>Klik tombol <b>“Build APK via GitHub Actions”</b> di atas.</li>
-      <li>Klik <b>Run workflow</b> → isi <code>game_folder</code> = slug kamu, <code>app_name</code> = nama aplikasi.</li>
-      <li>Tunggu ~2 menit (hijau ✅) → scroll bawah → <b>Artifacts</b> → download <code>game-apk</code> → ekstrak → install.</li>
+    <h2>🔐 Cara Bikin Token (sekali saja)</h2>
+    <ol style="margin-left:18px;font-size:13px;color:var(--mut)">
+      <li>Buka <code>github.com/settings/personal-access-tokens/new</code></li>
+      <li>Token name: bebas • Expiration: misal 90 hari</li>
+      <li>Resource owner: <code>ariepplara-glitch</code></li>
+      <li>Repository access: <b>Only select repositories</b> → pilih <code>html-to-apk</code></li>
+      <li>Permissions → Repository permissions → <b>Contents: Read &amp; write</b> + <b>Actions: Read &amp; write</b></li>
+      <li>Generate → copy (diawali <code>github_pat_…</code>) → tempel di atas → Simpan</li>
     </ol>
   </div>
 
-  <footer>HTML → APK Studio • Control Panel v1 • by Bosquh</footer>
+  <footer>HTML → APK Studio • 1‑Klik Builder • by Bosquh</footer>
 </div>
 
 <script>
-  const $ = id => document.getElementById(id);
-  let htmlContent = "";
+const OWNER='ariepplara-glitch', REPO='html-to-apk', BRANCH='main';
+const API='https://api.github.com';
+const $=id=>document.getElementById(id);
+let token=localStorage.getItem('gh_token')||'';
+let htmlFile=null, htmlContent='';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-  // --- warna tema hidup ---
-  $('theme').addEventListener('input', e=>{
-    document.documentElement.style.setProperty('--accent', e.target.value);
-  });
+/* ---------- util ---------- */
+function auth(){return{Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};}
+function slugify(s){return(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'my-game';}
+function log(m){const el=$('log');el.textContent+=(el.textContent==='Menunggu perintah…'?'':'\n')+m;el.scrollTop=el.scrollHeight;}
+function syncMeta(){$('pvName').textContent=$('appName').value||'App';$('pvVer').textContent='v'+($('ver').value||'1.0.0');$('slug').textContent=slugify($('appName').value);}
+['appName','ver','pkgId'].forEach(id=>$(id).addEventListener('input',syncMeta));
+$('theme').addEventListener('input',e=>document.documentElement.style.setProperty('--accent',e.target.value));
 
-  // --- slug dari nama app ---
-  function slugify(s){
-    return (s||'').toLowerCase().trim()
-      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'my-game';
+/* ---------- token ---------- */
+$('token').value=token;
+$('saveToken').addEventListener('click',async()=>{
+  token=$('token').value.trim();localStorage.setItem('gh_token',token);
+  if(!token){$('tokenStatus').textContent='Token dikosongkan.';return;}
+  $('tokenStatus').textContent='Memvalidasi…';
+  try{
+    const r=await fetch(`${API}/repos/${OWNER}/${REPO}`,{headers:auth()});
+    $('tokenStatus').innerHTML=r.ok?'<span class="ok">✅ Token valid & bisa akses repo.</span>':'❌ Token salah / tidak punya akses repo ini.';
+  }catch(e){$('tokenStatus').textContent='❌ Gagal cek: '+e.message;}
+});
+
+/* ---------- upload ---------- */
+const drop=$('drop');
+drop.addEventListener('click',()=>$('fileIn').click());
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('on')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('on'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('on');readFile(e.dataTransfer.files[0])});
+$('fileIn').addEventListener('change',e=>readFile(e.target.files[0]));
+function readFile(f){
+  if(!f)return; htmlFile=f;
+  const r=new FileReader();
+  r.onload=ev=>{htmlContent=ev.target.result;$('fname').innerHTML='<span class="ok">✅ '+f.name+'</span>';$('pv').srcdoc=htmlContent;};
+  r.readAsText(f);
+}
+function fileToBase64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
+
+/* ---------- GitHub ops ---------- */
+async function commitFile(path,b64,msg){
+  let sha;
+  const g=await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,{headers:auth()});
+  if(g.ok){sha=(await g.json()).sha;}
+  const body={message:msg,content:b64,branch:BRANCH}; if(sha)body.sha=sha;
+  const r=await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`,{method:'PUT',headers:auth(),body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('Commit gagal ('+r.status+'): '+(await r.text()).slice(0,120));
+}
+async function latestDispatchId(){
+  const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/runs?per_page=5&event=workflow_dispatch`,{headers:auth()});
+  const runs=(await r.json()).workflow_runs||[]; return runs.length?runs[0].id:0;
+}
+async function triggerBuild(slug,name){
+  const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/workflows/build.yml/dispatches`,
+    {method:'POST',headers:auth(),body:JSON.stringify({ref:BRANCH,inputs:{game_folder:slug,app_name:name}})});
+  if(r.status!==204)throw new Error('Trigger gagal ('+r.status+')');
+}
+async function waitForRun(beforeId){
+  await sleep(4000);
+  for(let i=0;i<90;i++){
+    const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/runs?per_page=10&event=workflow_dispatch`,{headers:auth()});
+    const run=((await r.json()).workflow_runs||[]).find(x=>x.id>beforeId);
+    if(run){
+      log('   ⏳ status: '+run.status+(run.conclusion?' / '+run.conclusion:''));
+      if(run.status==='completed')return run;
+    }
+    await sleep(6000);
   }
-  function syncMeta(){
-    $('pvName').textContent = $('appName').value || 'App';
-    $('pvVer').textContent  = 'v'+($('ver').value||'1.0.0');
-    $('slug').textContent   = slugify($('appName').value);
-  }
-  ['appName','ver','pkgId'].forEach(id=>$(id).addEventListener('input', syncMeta));
+  throw new Error('Timeout menunggu build (>9 menit).');
+}
+async function getArtifact(runId){
+  const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts`,{headers:auth()});
+  return((await r.json()).artifacts||[]).find(a=>a.name==='game-apk');
+}
+function saveBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();}
+async function tryAutoDownload(art){
+  try{
+    const r=await fetch(art.archive_download_url,{headers:auth(),redirect:'manual'});
+    const loc=r.headers.get('location'); if(!loc)return false;
+    const blob=await(await fetch(loc)).blob(); saveBlob(blob,'game-apk.zip'); return true;
+  }catch(e){return false;}
+}
 
-  // --- upload / drag-drop ---
-  const drop = $('drop');
-  drop.addEventListener('click', ()=>$('fileIn').click());
-  drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('on')});
-  drop.addEventListener('dragleave', ()=>drop.classList.remove('on'));
-  drop.addEventListener('drop', e=>{e.preventDefault();drop.classList.remove('on');readFile(e.dataTransfer.files[0])});
-  $('fileIn').addEventListener('change', e=>readFile(e.target.files[0]));
-  function readFile(f){
-    if(!f) return;
-    const r = new FileReader();
-    r.onload = ev=>{
-      htmlContent = ev.target.result;
-      $('fname').innerHTML = '<span class="ok">✅ '+f.name+'</span>';
-      $('pv').srcdoc = htmlContent;
-    };
-    r.readAsText(f);
-  }
-
-  // --- download html siap push ---
-  $('dlBtn').addEventListener('click', ()=>{
-    if(!htmlContent){ toast('Upload HTML dulu ya bos 🙏'); return; }
-    const blob = new Blob([htmlContent], {type:'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'index.html';
-    a.click();
-    toast('Ter-download! Push ke folder games/'+slugify($('appName').value)+'/ di repo.');
-  });
-
-  // --- copy langkah ---
-  $('copyBtn').addEventListener('click', ()=>{
-    const s = slugify($('appName').value);
-    const t = `1. Push HTML ke folder games/${s}/ (file utama: index.html)\n2. Buka Actions > Build APK > Run workflow\n3. game_folder = ${s} , app_name = ${$('appName').value}\n4. Tunggu hijau, download Artifacts > game-apk`;
-    navigator.clipboard.writeText(t).then(()=>toast('Langkah ter-copy! 📋'), ()=>toast('Gagal copy.'));
-  });
-
-  function toast(m){ const el=$('toast'); el.textContent=m; el.style.color='#2ecc71'; }
-
-  syncMeta();
+/* ---------- pipeline ---------- */
+$('buildBtn').addEventListener('click',async()=>{
+  $('dlApk').classList.add('hidden');$('manualBtn').classList.add('hidden');
+  $('log').textContent='Menunggu perintah…';
+  if(!token){log('❌ Isi & simpan token dulu (langkah 0).');return;}
+  if(!htmlFile){log('❌ Upload file HTML dulu (langkah 1).');return;}
+  const slug=slugify($('appName').value), name=$('appName').value.trim()||'My HTML Game';
+  $('buildBtn').disabled=true;
+  try{
+    log('1/5 Commit game ke repo…');
+    await commitFile(`games/${slug}/index.html`,await fileToBase64(htmlFile),`Upload game: ${name}`);
+    log('   ✅ committed → games/'+slug+'/index.html');
+    log('2/5 Picu GitHub Actions…');
+    const beforeId=await latestDispatchId();
+    await triggerBuild(slug,name);
+    log('   ✅ build dipicu');
+    log('3/5 Menunggu build selesai (±2–5 menit)…');
+    const run=await waitForRun(beforeId);
+    if(run.conclusion!=='success')throw new Error('Build '+run.conclusion+'. Buka log di GitHub.');
+    log('   ✅ build SUKSES');
+    log('4/5 Ambil artifact…');
+    const art=await getArtifact(run.id);
+    if(!art)throw new Error('Artifact "game-apk" tidak ketemu.');
+    log('5/5 Download APK…');
+    $('manualBtn').href=`https://github.com/${OWNER}/${REPO}/actions/runs/${run.id}`;
+    $('manualBtn').classList.remove('hidden');
+    const ok=await tryAutoDownload(art);
+    if(ok){log('✅ SELESAI! game-apk.zip ter-download → ekstrak → install.');}
+    else{log('⚠️ Auto-download diblokir browser (CORS). Pakai tombol "Buka halaman build" lalu klik Artifacts → game-apk.');}
+  }catch(e){log('❌ '+e.message);}
+  $('buildBtn').disabled=false;
+});
+$('dlApk').classList.add('hidden');
+syncMeta();
 </script>
 </body>
 </html>
