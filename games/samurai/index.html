@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Samurai Slash</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#1a0e1f;font-family:system-ui,Segoe UI,Roboto,sans-serif;color:#fff;touch-action:none;user-select:none}
+#game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+#hud{position:absolute;top:0;left:0;right:0;z-index:3;padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.hpwrap{width:150px}
+.hplbl{font-size:10px;letter-spacing:1px;opacity:.8}
+.hpbar{height:12px;border:1px solid rgba(255,255,255,.4);border-radius:6px;background:rgba(0,0,0,.4);overflow:hidden;margin-top:3px}
+#hpfill{height:100%;width:100%;background:linear-gradient(90deg,#ff3b3b,#ff8a3b);transition:width .15s}
+.sc{margin-top:8px;font-weight:800;font-size:20px;text-shadow:0 0 8px rgba(0,0,0,.6)}
+.sc small{display:block;font-size:10px;opacity:.7;font-weight:600}
+.icons{display:flex;gap:8px;pointer-events:auto}
+.iconbtn{width:40px;height:40px;border-radius:50%;font-size:17px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff}
+.iconbtn:active{transform:scale(.9)}
+/* kontrol */
+#pad,#act{position:absolute;bottom:18px;z-index:3;display:flex;gap:14px;pointer-events:none}
+#pad{left:16px}
+#act{right:16px}
+.cb{pointer-events:auto;width:64px;height:64px;border-radius:50%;font-size:24px;border:1px solid rgba(255,255,255,.3);background:rgba(20,10,30,.45);color:#fff;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center}
+.cb:active,.cb.on{background:rgba(177,77,255,.55);transform:scale(.92)}
+.cb.atk{background:rgba(255,77,77,.4)}
+.cb.atk:active{background:rgba(255,77,77,.7)}
+/* layar */
+.scr{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center;background:rgba(15,8,20,.82);backdrop-filter:blur(5px);padding:24px}
+.hide{display:none!important}
+.title{font-size:40px;font-weight:900;letter-spacing:2px;line-height:1.05;background:linear-gradient(90deg,#ff5e5e,#ffd166,#ff5e5e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,90,90,.5))}
+.sub{opacity:.75;font-size:14px;max-width:300px;line-height:1.5}
+.big{font-size:50px;font-weight:900;color:#ffd166;text-shadow:0 0 18px rgba(255,209,102,.6)}
+.btn{padding:14px 38px;border:0;border-radius:40px;cursor:pointer;min-width:200px;font-size:17px;font-weight:800;letter-spacing:1px;color:#1a0e1f;background:linear-gradient(90deg,#ffd166,#ff5e5e);box-shadow:0 0 22px rgba(255,90,90,.5)}
+.btn:active{transform:scale(.94)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;box-shadow:none}
+.keys{font-size:12px;opacity:.6;margin-top:4px;line-height:1.7}
+.exithint{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.15);padding:9px 16px;border-radius:18px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div class="hpwrap"><div class="hplbl">NYAWA</div><div class="hpbar"><div id="hpfill"></div></div>
+    <div class="sc"><span id="score">0</span><small>TERBAIK <span id="best">0</span></small></div></div>
+  <div class="icons"><button class="iconbtn" id="muteBtn">🔊</button><button class="iconbtn" id="pauseBtn">⏸</button></div>
+</div>
+
+<div id="pad">
+  <button class="cb" id="bLeft">◀</button>
+  <button class="cb" id="bRight">▶</button>
+</div>
+<div id="act">
+  <button class="cb" id="bShield">🛡️</button>
+  <button class="cb" id="bJump">🦘</button>
+  <button class="cb atk" id="bAtk">🗡️</button>
+</div>
+
+<div class="scr" id="startScr">
+  <div class="title">SAMURAI<br>SLASH</div>
+  <div class="sub">Ronin bermata merah menyerang dari kegelapan. Tebas mereka sebelum mereka menebasmu!</div>
+  <button class="btn" id="startBtn">MULAI</button>
+  <button class="btn ghost" id="exitBtn1">KELUAR</button>
+  <div class="keys">◀ ▶ gerak/lari • 🛡️ tahan = blok (jalan pelan)<br>🦘 lompat • 🗡️ tebas (3x combo)</div>
+</div>
+
+<div class="scr hide" id="pauseScr">
+  <div class="title" style="font-size:32px">JEDA</div>
+  <button class="btn" id="resumeBtn">LANJUT</button>
+  <button class="btn ghost" id="exitBtn2">KELUAR</button>
+</div>
+
+<div class="scr hide" id="overScr">
+  <div class="title" style="font-size:30px">GUGUR</div>
+  <div class="sub">Musuh ditumbangkan</div>
+  <div class="big" id="finalScore">0</div>
+  <div class="sub" id="newBest" style="color:#ffd166">🏆 REKOR BARU!</div>
+  <button class="btn" id="retryBtn">BALAS DENDAM</button>
+  <button class="btn ghost" id="exitBtn3">KELUAR</button>
+</div>
+<div class="exithint hide" id="exitHint">Tekan tombol ◀ Back di HP untuk keluar</div>
+</div>
+
+<script>
+(function(){
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var elScore=document.getElementById('score'),elBest=document.getElementById('best'),hpfill=document.getElementById('hpfill');
+var scr={start:document.getElementById('startScr'),pause:document.getElementById('pauseScr'),over:document.getElementById('overScr')};
+var finalScore=document.getElementById('finalScore'),newBest=document.getElementById('newBest'),exitHint=document.getElementById('exitHint'),muteBtn=document.getElementById('muteBtn');
+var W=0,H=0,dpr=1,GROUND=96,DRAW_H=124;
+
+// ===== sprite (auto-potong frame kotak) =====
+var FILES={idle:'Idle.png',run:'Run.png',walk:'Walk.png',jump:'Jump.png',atk1:'Attack_1.png',atk2:'Attack_2.png',atk3:'Attack_3.png',hurt:'Hurt.png',shield:'Shield.png'};
+var ANIM={},loaded=0,total=Object.keys(FILES).length,ready=false;
+Object.keys(FILES).forEach(function(k){
+  var img=new Image();
+  img.onload=function(){
+    var fh=img.height||128, fw=fh, n=Math.max(1,Math.round(img.width/fw));
+    ANIM[k]={img:img,fw:fw,fh:fh,n:n}; loaded++; if(loaded>=total){ready=true;}
+  };
+  img.onerror=function(){ ANIM[k]={img:img,fw:128,fh:128,n:1,bad:true}; loaded++; if(loaded>=total){ready=true;} };
+  img.src=FILES[k];
+});
+
+// ===== state =====
+var state='start',bgHidden=false,last=0;
+var best=0; try{best=parseInt(localStorage.getItem('samuraiBest')||'0',10)||0;}catch(e){} elBest.textContent=best;
+var P={x:0,y:0,vy:0,facing:1,onGround:true,anim:'idle',fi:0,at:0,
+  hp:100,maxhp:100,inv:0,hurtT:0,atkT:0,attacking:false,combo:0,comboW:0,blocking:false};
+var enemies=[],parts=[],clouds=[];
+var score=0,kills=0,time=0,spawnT=1.2;
+
+// ===== input =====
+var inp={left:false,right:false,shield:false,jumpQ:false,atkQ:false};
+function hold(id,key){var b=document.getElementById(id);
+  var on=function(e){e.preventDefault();inp[key]=true;b.classList.add('on');};
+  var off=function(e){inp[key]=false;b.classList.remove('on');};
+  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);}
+function tap(id,key){var b=document.getElementById(id);
+  b.addEventListener('pointerdown',function(e){e.preventDefault();inp[key]=true;});}
+hold('bLeft','left');hold('bRight','right');hold('bShield','shield');
+tap('bJump','jumpQ');tap('bAtk','atkQ');
+
+// ===== audio (Jepang-ish, aman: try/catch) =====
+var AC=null,master=null,audioOn=false,muted=false,sched=null,nextN=0,tick=0,noiseB=null;
+var BPM=110,SIX=(60/BPM)/4;
+var SCALE=[196.00,220.00,261.63,293.66,349.23,392.00],BASS=[98,82.41,110,87.31];
+function env(g,t,p,d){try{g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(p,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);}catch(e){}}
+function voice(f,t,d,tp,p,fl){try{var o=AC.createOscillator(),g=AC.createGain();o.type=tp;o.frequency.setValueAtTime(f,t);var nd=o;if(fl){var ff=AC.createBiquadFilter();ff.type='lowpass';ff.frequency.value=fl;o.connect(ff);nd=ff;}nd.connect(g);g.connect(master);env(g,t,p,d);o.start(t);o.stop(t+d+.05);}catch(e){}}
+function kick(t){try{var o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);g.connect(master);env(g,t,.7,.2);o.start(t);o.stop(t+.25);}catch(e){}}
+function hat(t){try{var s=AC.createBufferSource();s.buffer=noiseB;var f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=7000;var g=AC.createGain();s.connect(f);f.connect(g);g.connect(master);env(g,t,.1,.05);s.start(t);s.stop(t+.06);}catch(e){}}
+function step(n,t){var s=n%16,bar=Math.floor(n/16)%4;if(s%4===0)kick(t);if(s%4===2)hat(t);if(s===0||s===8)voice(BASS[bar],t,.3,'sawtooth',.18,600);if(s%2===0)voice(SCALE[(n*2+bar)%SCALE.length],t,.2,'triangle',.09);}
+function scheduler(){if(!AC)return;try{while(nextN<AC.currentTime+.12){step(tick,nextN);nextN+=SIX;tick++;}}catch(e){}}
+function startAudio(){try{if(audioOn)return;var WC=window.AudioContext||window.webkitAudioContext;if(!WC)return;AC=new WC();master=AC.createGain();master.gain.value=muted?0:.18;master.connect(AC.destination);noiseB=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);var d=noiseB.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;nextN=AC.currentTime+.1;tick=0;sched=setInterval(scheduler,25);audioOn=true;}catch(e){}}
+function toggleMute(){muted=!muted;if(master&&AC)try{master.gain.setValueAtTime(muted?0:.18,AC.currentTime);}catch(e){}muteBtn.textContent=muted?'🔇':'';}
+
+// ===== layar =====
+function showOnly(k){for(var s in scr)scr[s].classList.add('hide');if(k)scr[k].classList.remove('hide');}
+function hideAll(){for(var s in scr)scr[s].classList.add('hide');}
+
+// ===== resize =====
+function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.floor(W*dpr);cv.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(!P.x){P.x=W*0.35;}P.y=H-GROUND;if(!clouds.length)for(var i=0;i<5;i++)clouds.push({x:Math.random()*W,y:30+Math.random()*120,s:.3+Math.random()*.6});}
+window.addEventListener('resize',resize);
+
+// ===== mulai / over / keluar =====
+function startGame(){P.x=W*0.35;P.y=H-GROUND;P.vy=0;P.facing=1;P.onGround=true;P.hp=P.maxhp;P.inv=0;P.hurtT=0;P.atkT=0;P.attacking=false;P.combo=0;P.blocking=false;P.anim='idle';enemies=[];parts=[];score=0;kills=0;time=0;spawnT=1.0;state='play';hideAll();hpfill.style.width='100%';startAudio();if(AC&&AC.state==='suspended')try{AC.resume();}catch(e){}last=performance.now();}
+function gameOver(){state='over';var s=kills;if(s>best){best=s;try{localStorage.setItem('samuraiBest',String(best));}catch(e){}elBest.textContent=best;newBest.style.display='block';}else newBest.style.display='none';finalScore.textContent=s;showOnly('over');}
+function exitApp(){if(window.Android&&typeof window.Android.exitApp==='function'){window.Android.exitApp();return;}try{window.close();}catch(e){}exitHint.classList.remove('hide');setTimeout(function(){exitHint.classList.add('hide');},2500);}
+
+document.getElementById('startBtn').onclick=startGame;
+document.getElementById('retryBtn').onclick=startGame;
+document.getElementById('pauseBtn').onclick=function(){if(state==='play'){state='pause';showOnly('pause');if(AC)try{AC.suspend();}catch(e){}}};
+document.getElementById('resumeBtn').onclick=function(){state='play';hideAll();if(AC)try{AC.resume();}catch(e){}last=performance.now();};
+document.getElementById('exitBtn1').onclick=exitApp;
+document.getElementById('exitBtn2').onclick=exitApp;
+document.getElementById('exitBtn3').onclick=exitApp;
+muteBtn.onclick=toggleMute;
+document.addEventListener('visibilitychange',function(){bgHidden=document.hidden;if(document.hidden){if(AC)try{AC.suspend();}catch(e){}}else{if(state==='play'&&AC)try{AC.resume();}catch(e){}last=performance.now();}});
+
+// ===== partikel =====
+function burst(x,y,c,n){for(var i=0;i<n;i++){var a=Math.random()*6.28,sp=2+Math.random()*5;parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,r:2+Math.random()*3,life:1,c:c});}}
+
+// ===== update =====
+function update(dt){
+  time+=dt;
+  // hurt lock
+  if(P.hurtT>0){P.hurtT-=dt;P.anim='hurt';P.at+=dt;P.inv-=dt;physics(dt);return;}
+  P.inv-=dt;
+  // blok
+  P.blocking = inp.shield && P.onGround && !P.attacking;
+  // gerak
+  var moving=false,spd=0;
+  if(!P.attacking){
+    if(inp.left&&!inp.right){P.facing=-1;moving=true;}
+    else if(inp.right&&!inp.left){P.facing=1;moving=true;}
+    if(moving){ spd = P.blocking?150:320; P.x+=P.facing*spd*dt; }
+  }
+  P.x=Math.max(40,Math.min(W-40,P.x));
+  // lompat
+  if(inp.jumpQ&&P.onGround&&!P.blocking&&!P.attacking){P.vy=-860;P.onGround=false;}
+  inp.jumpQ=false;
+  // tebas (combo)
+  P.comboW-=dt;
+  if(P.comboW<=0)P.combo=0;
+  if(inp.atkQ&&!P.attacking&&!P.blocking){
+    inp.atkQ=false;P.combo=(P.combo%3)+1;P.comboW=0.6;P.attacking=true;P.atkT=0.34;P.at=0;
+  } else inp.atkQ=false;
+  if(P.attacking){P.atkT-=dt;P.at+=dt;if(P.atkT<=0)P.attacking=false;}
+  // hitbox tebas
+  var hitActive = P.attacking && (0.34-P.atkT)>0.10 && (0.34-P.atkT)<0.24;
+  if(hitActive){
+    var hx = P.facing>0 ? P.x+8 : P.x-8-72;
+    for(var i=enemies.length-1;i>=0;i--){var e=enemies[i];
+      if(e.x+e.w/2>hx && e.x-e.w/2<hx+72 && Math.abs(e.y-e.h/2-(P.y-DRAW_H/2))<80){
+        burst(e.x,e.y-e.h/2,'#ff5e5e',16);enemies.splice(i,1);kills++;score=kills;elScore.textContent=score;
+      }
+    }
+  }
+  // pilih animasi
+  if(P.attacking){P.anim=P.combo===1?'atk1':P.combo===2?'atk2':'atk3';}
+  else if(!P.onGround){P.anim='jump';}
+  else if(P.blocking&&!moving){P.anim='shield';}
+  else if(moving&&P.blocking){P.anim='walk';}
+  else if(moving){P.anim='run';}
+  else{P.anim='idle';}
+  physics(dt);
+  // musuh
+  spawnT-=dt;
+  var iv=Math.max(0.8,2.0-time*0.03);
+  if(spawnT<=0&&enemies.length<5){spawnT=iv;var fromR=Math.random()>.3;
+    enemies.push({x:fromR?W+40:-40,y:H-GROUND,w:46,h:104,dir:fromR?-1:1,bob:Math.random()*6});}
+  var espd=72+Math.min(80,time*2);
+  for(var j=enemies.length-1;j>=0;j--){var en=enemies[j];
+    en.dir = P.x>en.x?1:-1; en.x+=en.dir*espd*dt; en.bob+=dt*10;
+    if(Math.abs(en.x-P.x)<(en.w/2+18)&&P.inv<=0){
+      if(P.blocking && en.dir===P.facing*-1===false && ((en.x-P.x)*P.facing>0)){ // musuh di depan & diblok
+        en.x+=en.dir*-1*60*dt; burst(P.x+P.facing*30,P.y-60,'#9fd8ff',6);
+      } else if(P.blocking && ((en.x>P.x&&P.facing>0)||(en.x<P.x&&P.facing<0))){
+        en.x-=en.dir*90*dt; burst(P.x+P.facing*30,P.y-60,'#9fd8ff',6);
+      } else {
+        P.hp-=20;P.inv=1.0;P.hurtT=0.4;P.at=0;P.attacking=false;
+        P.vy=-260;P.x+=(P.x>en.x?1:-1)*40;
+        hpfill.style.width=Math.max(0,P.hp)+'%';
+        burst(P.x,P.y-60,'#ff3b3b',10);
+        if(P.hp<=0){gameOver();return;}
+      }
+    }
+  }
+  // partikel
+  for(var k=parts.length-1;k>=0;k--){var p=parts[k];p.x+=p.vx;p.y+=p.vy;p.vy+=0.3;p.life-=dt*1.8;if(p.life<=0)parts.splice(k,1);}
+  // awan
+  for(var c=0;c<clouds.length;c++){clouds[c].x-=clouds[c].s*14*dt;if(clouds[c].x<-80)clouds[c].x=W+80;}
+}
+function physics(dt){P.vy+=2200*dt;P.y+=P.vy*dt;if(P.y>=H-GROUND){P.y=H-GROUND;P.vy=0;P.onGround=true;}}
+
+// ===== gambar =====
+function drawSprite(a,x,feetY,face){
+  if(!a||a.bad||!a.n)return;
+  var fr=Math.floor(P.at*10)%a.n; if(a.n===1)fr=0;
+  var sc=DRAW_H/a.fh, dw=a.fw*sc, dh=DRAW_H;
+  ctx.save();ctx.translate(x,feetY-dh);
+  if(face<0){ctx.translate(dw,0);ctx.scale(-1,1);}
+  ctx.drawImage(a.img,fr*a.fw,0,a.fw,a.fh,0,0,dw,dh);
+  ctx.restore();
+}
+function drawEnemy(e){
+  var bob=Math.sin(e.bob)*3, x=e.x, y=e.y, w=e.w, h=e.h;
+  ctx.save();ctx.translate(x,y);
+  if(e.dir<0)ctx.scale(-1,1);
+  // bayangan
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(0,0,w*0.5,7,0,0,7);ctx.fill();
+  // tubuh siluet
+  ctx.fillStyle='#160a14';
+  ctx.fillRect(-w/2+6,-h+bob+18,w-12,h-18);
+  ctx.beginPath();ctx.arc(0,-h+bob+14,13,0,7);ctx.fill();
+  // mata merah
+  ctx.shadowBlur=10;ctx.shadowColor='#ff2b2b';ctx.fillStyle='#ff2b2b';
+  ctx.fillRect(3,-h+bob+11,5,4);ctx.fillRect(-2,-h+bob+11,3,4);ctx.shadowBlur=0;
+  // pedang
+  ctx.strokeStyle='#cfd8ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(8,-h*0.5+bob);ctx.lineTo(34,-h*0.5+bob+10);ctx.stroke();
+  ctx.restore();
+}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // langit senja
+  var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2a1330');g.addColorStop(.5,'#7a2b3f');g.addColorStop(1,'#d9743a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // matahari
+  ctx.save();ctx.shadowBlur=60;ctx.shadowColor='#ffce6b';ctx.fillStyle='#ffe0a0';ctx.beginPath();ctx.arc(W*0.74,H*0.34,46,0,7);ctx.fill();ctx.restore();
+  // awan
+  ctx.fillStyle='rgba(255,200,150,.18)';for(var c=0;c<clouds.length;c++){var cl=clouds[c];rr(cl.x,cl.y,70*cl.s+30,14,7);ctx.fill();}
+  // gunung parallax
+  var px=-(P.x-W/2)*0.04;
+  ctx.fillStyle='#3a1830';ctx.beginPath();ctx.moveTo(-50+px,H-GROUND);for(var mx=-50;mx<W+100;mx+=160){ctx.lineTo(mx+80+px,H-GROUND-120);}ctx.lineTo(W+50,H-GROUND);ctx.fill();
+  ctx.fillStyle='#241022';ctx.beginPath();ctx.moveTo(-50+px*1.6,H-GROUND);for(var m2=-80;m2<W+120;m2+=120){ctx.lineTo(m2+60+px*1.6,H-GROUND-70);}ctx.lineTo(W+50,H-GROUND);ctx.fill();
+  // tanah
+  ctx.fillStyle='#1c0c18';ctx.fillRect(0,H-GROUND,W,GROUND);
+  ctx.fillStyle='#3a1c2a';for(var gx=0;gx<W;gx+=14){ctx.fillRect(gx,H-GROUND,8,4);}
+  // musuh
+  for(var i=0;i<enemies.length;i++)drawEnemy(enemies[i]);
+  // pemain (kedip kalau invuln)
+  if(!(P.inv>0&&Math.floor(P.inv*16)%2))drawSprite(ANIM[P.anim],P.x,P.y,P.facing);
+  // efek tebas
+  if(P.attacking&&(0.34-P.atkT)>0.08&&(0.34-P.atkT)<0.26){
+    ctx.save();ctx.translate(P.x+P.facing*30,P.y-70);ctx.scale(P.facing,1);
+    ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=4;ctx.shadowBlur=14;ctx.shadowColor='#fff';
+    ctx.beginPath();ctx.arc(0,0,46,-0.9,0.9);ctx.stroke();ctx.restore();
+  }
+  // partikel
+  for(var k=0;k<parts.length;k++){var p=parts[k];ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();}ctx.globalAlpha=1;
+}
+
+function loop(now){requestAnimationFrame(loop);if(bgHidden)return;var dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;if(state==='play')update(dt);if(ready||true)draw();}
+
+resize();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
