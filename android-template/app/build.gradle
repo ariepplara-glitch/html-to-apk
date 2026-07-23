@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.htmltoapk.game'
+    namespace 'com.agunpu.game'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.htmltoapk.game"
+        applicationId "com.agunpu.game"
         minSdk 21
         targetSdk 34
         versionCode 1
