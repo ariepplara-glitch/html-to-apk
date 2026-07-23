@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Sample</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: #222;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        button {
+            font-size: 24px;
+            padding: 20px 40px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            background: #4CAF50;
+            color: white;
+        }
+        #score { font-size: 48px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Game HTML Sample</h1>
+    <p>Klik tombol untuk nambah skor!</p>
+    <div id="score">0</div>
+    <button onclick="addScore()">KLIK!</button>
+
+    <script>
+        let score = 0;
+        function addScore() {
+            score++;
+            document.getElementById('score').innerText = score;
+        }
+    </script>
+</body>
+</html>
