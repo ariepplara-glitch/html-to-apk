@@ -3,6 +3,7 @@ package com.htmltoapk.game;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
+import android.webkit.JavascriptInterface;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,6 +21,16 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
+
+        // jembatan JS -> native: biar tombol KELUAR di game bisa nutup app
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void exitApp() {
+                runOnUiThread(new Runnable() {
+                    @Override public void run() { finish(); }
+                });
+            }
+        }, "Android");
 
         webView.loadUrl("file:///android_asset/www/index.html");
     }
