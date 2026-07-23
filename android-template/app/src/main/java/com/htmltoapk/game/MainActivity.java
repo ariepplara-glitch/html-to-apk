@@ -1,4 +1,4 @@
-package com.htmltoapk.game;
+package com.agunpu.game;
 
 import android.os.Bundle;
 import android.webkit.WebView;
