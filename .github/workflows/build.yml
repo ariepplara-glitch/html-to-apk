@@ -11,6 +11,14 @@ on:
         description: 'Nama aplikasi'
         required: true
         default: 'My HTML Game'
+      version_name:
+        description: 'Version name, misal 1.0.0 (kosong = default template)'
+        required: false
+        default: ''
+      package_id:
+        description: 'Package ID / applicationId, misal com.bosquh.neonstrike (kosong = default template)'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -44,6 +52,39 @@ jobs:
         run: |
           sed -i "s/My HTML Game/${{ github.event.inputs.app_name }}/g" \
             android-template/app/src/main/res/values/strings.xml
+
+      - name: Inject per-game icon (kalau ada)
+        run: |
+          SRC="games/${{ github.event.inputs.game_folder }}/icon.png"
+          RES="android-template/app/src/main/res"
+          if [ -f "$SRC" ] && [ -d "$RES" ]; then
+            echo "icon custom ditemukan -> inject"
+            rm -rf "$RES/mipmap-anydpi-v26"
+            rm -f "$RES"/mipmap-*/ic_launcher* "$RES"/mipmap-*/ic_launcher_round*
+            mkdir -p "$RES/mipmap-xxxhdpi"
+            cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher.png"
+            cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+            echo "icon terpasang di mipmap-xxxhdpi"
+          else
+            echo "tidak ada icon custom -> pakai icon default template"
+          fi
+
+      - name: Set version & package (kalau diisi)
+        run: |
+          G="android-template/app/build.gradle"
+          [ -f "$G" ] || G="android-template/build.gradle"
+          if [ -f "$G" ]; then
+            echo "build.gradle = $G"
+            VN="${{ github.event.inputs.version_name }}"
+            PKG="${{ github.event.inputs.package_id }}"
+            VC="${{ github.run_number }}"
+            [ -z "$VC" ] && VC=$(date +%y%m%d)
+            echo "  target: versionName='$VN' applicationId='$PKG' versionCode=$VC"
+            VN="$VN" PKG="$PKG" VC="$VC" perl -pi -e 's/(versionName[^"=]*[= ]*")[^"]*(")/${1}$ENV{VN}${2}/g if $ENV{VN}; s/(applicationId[^"=]*[= ]*")[^"]*(")/${1}$ENV{PKG}${2}/g if $ENV{PKG}; s/(versionCode[^0-9]*)[0-9]+/${1}$ENV{VC}/g;' "$G"
+            echo "  version & package diterapkan"
+          else
+            echo "build.gradle tidak ditemukan di path standar -> version/package pakai default"
+          fi
 
       - name: Generate wrapper & build APK
         run: |
