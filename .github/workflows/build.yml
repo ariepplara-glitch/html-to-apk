@@ -12,11 +12,11 @@ on:
         required: true
         default: 'My HTML Game'
       version_name:
-        description: 'Version name, misal 1.0.0 (kosong = default template)'
+        description: 'Version name, misal 1.0.0 (kosong = default)'
         required: false
         default: ''
       package_id:
-        description: 'Package ID / applicationId, misal com.bosquh.neonstrike (kosong = default template)'
+        description: 'Package ID, misal com.agunpu.neonstrike (kosong = default)'
         required: false
         default: ''
 
@@ -47,26 +47,33 @@ jobs:
           mkdir -p android-template/app/src/main/assets/www
           cp -r games/${{ github.event.inputs.game_folder }}/* \
                 android-template/app/src/main/assets/www/
+          rm -f android-template/app/src/main/assets/www/icon.png
 
       - name: Set app name
         run: |
           sed -i "s/My HTML Game/${{ github.event.inputs.app_name }}/g" \
             android-template/app/src/main/res/values/strings.xml
 
-      - name: Inject per-game icon (kalau ada)
+      - name: Inject icon brute-force (mipmap + drawable, hapus adaptive)
         run: |
           SRC="games/${{ github.event.inputs.game_folder }}/icon.png"
           RES="android-template/app/src/main/res"
           if [ -f "$SRC" ] && [ -d "$RES" ]; then
-            echo "icon custom ditemukan -> inject"
+            echo "ICON: custom ditemukan -> inject brute-force"
             rm -rf "$RES/mipmap-anydpi-v26"
             rm -f "$RES"/mipmap-*/ic_launcher* "$RES"/mipmap-*/ic_launcher_round*
+            rm -f "$RES"/drawable/ic_launcher* "$RES"/drawable/ic_launcher_round* "$RES"/drawable-*/ic_launcher*
             mkdir -p "$RES/mipmap-xxxhdpi"
             cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher.png"
             cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
-            echo "icon terpasang di mipmap-xxxhdpi"
+            mkdir -p "$RES/drawable"
+            cp "$SRC" "$RES/drawable/ic_launcher.png"
+            cp "$SRC" "$RES/drawable/ic_launcher_round.png"
+            echo "ICON: terpasang di mipmap-xxxhdpi + drawable"
+            echo "ICON: folder mipmap sekarang ->"; ls -1 "$RES" | grep -i mipmap || echo "  (tidak ada folder mipmap lain, wajar)"
+            echo "ICON: ic_launcher di drawable ->"; ls -1 "$RES/drawable" | grep -i ic_launcher || echo "  (kosong)"
           else
-            echo "tidak ada icon custom -> pakai icon default template"
+            echo "ICON: tidak ada icon custom -> pakai default template"
           fi
 
       - name: Set version & package (kalau diisi)
@@ -74,16 +81,15 @@ jobs:
           G="android-template/app/build.gradle"
           [ -f "$G" ] || G="android-template/build.gradle"
           if [ -f "$G" ]; then
-            echo "build.gradle = $G"
             VN="${{ github.event.inputs.version_name }}"
             PKG="${{ github.event.inputs.package_id }}"
             VC="${{ github.run_number }}"
             [ -z "$VC" ] && VC=$(date +%y%m%d)
-            echo "  target: versionName='$VN' applicationId='$PKG' versionCode=$VC"
+            echo "VER/PKG: target versionName='$VN' applicationId='$PKG' versionCode=$VC"
             VN="$VN" PKG="$PKG" VC="$VC" perl -pi -e 's/(versionName[^"=]*[= ]*")[^"]*(")/${1}$ENV{VN}${2}/g if $ENV{VN}; s/(applicationId[^"=]*[= ]*")[^"]*(")/${1}$ENV{PKG}${2}/g if $ENV{PKG}; s/(versionCode[^0-9]*)[0-9]+/${1}$ENV{VC}/g;' "$G"
-            echo "  version & package diterapkan"
+            echo "VER/PKG: diterapkan"
           else
-            echo "build.gradle tidak ditemukan di path standar -> version/package pakai default"
+            echo "VER/PKG: build.gradle tidak ditemukan -> pakai default"
           fi
 
       - name: Generate wrapper & build APK
