@@ -54,26 +54,35 @@ jobs:
           sed -i "s/My HTML Game/${{ github.event.inputs.app_name }}/g" \
             android-template/app/src/main/res/values/strings.xml
 
-      - name: Inject icon brute-force (mipmap + drawable, hapus adaptive)
+      - name: Inject icon NUCLEAR (mipmap+drawable+manifest) + diagnostic
         run: |
           SRC="games/${{ github.event.inputs.game_folder }}/icon.png"
           RES="android-template/app/src/main/res"
+          M="android-template/app/src/main/AndroidManifest.xml"
+          echo "game_folder = ${{ github.event.inputs.game_folder }}"
+          echo "SRC path    = $SRC"
           if [ -f "$SRC" ] && [ -d "$RES" ]; then
-            echo "ICON: custom ditemukan -> inject brute-force"
+            echo "== icon source =="; ls -la "$SRC"; file "$SRC" || true
+            echo "== manifest SEBELUM =="; grep -nE 'android:(icon|roundIcon)' "$M" || echo "  (android:icon TIDAK ditemukan di manifest)"
             rm -rf "$RES/mipmap-anydpi-v26"
             rm -f "$RES"/mipmap-*/ic_launcher* "$RES"/mipmap-*/ic_launcher_round*
-            rm -f "$RES"/drawable/ic_launcher* "$RES"/drawable/ic_launcher_round* "$RES"/drawable-*/ic_launcher*
+            rm -f "$RES"/drawable/ic_launcher* "$RES"/drawable/ic_launcher_round* "$RES"/drawable-*/ic_launcher* "$RES"/drawable-*/ic_launcher_round*
             mkdir -p "$RES/mipmap-xxxhdpi"
             cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher.png"
             cp "$SRC" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
             mkdir -p "$RES/drawable"
             cp "$SRC" "$RES/drawable/ic_launcher.png"
             cp "$SRC" "$RES/drawable/ic_launcher_round.png"
-            echo "ICON: terpasang di mipmap-xxxhdpi + drawable"
-            echo "ICON: folder mipmap sekarang ->"; ls -1 "$RES" | grep -i mipmap || echo "  (tidak ada folder mipmap lain, wajar)"
-            echo "ICON: ic_launcher di drawable ->"; ls -1 "$RES/drawable" | grep -i ic_launcher || echo "  (kosong)"
+            if [ -f "$M" ]; then
+              perl -pi -e 's|(android:icon=")[^"]*(")|${1}\@drawable/ic_launcher${2}|g; s|(android:roundIcon=")[^"]*(")|${1}\@drawable/ic_launcher_round${2}|g;' "$M"
+            fi
+            echo "== manifest SESUDAH =="; grep -nE 'android:(icon|roundIcon)' "$M" || echo "  (tetap tidak ada)"
+            echo "== drawable launcher =="; ls -1 "$RES/drawable" | grep -i ic_launcher || echo "  (KOSONG!)"
+            echo "ICON: selesai inject nuclear"
           else
-            echo "ICON: tidak ada icon custom -> pakai default template"
+            echo "ICON: TIDAK inject (icon custom/res tidak ketemu) -> default template"
+            [ -f "$SRC" ] && echo "  icon.png ADA" || echo "  icon.png TIDAK ADA di repo!"
+            [ -d "$RES" ] && echo "  res ADA" || echo "  res TIDAK ADA!"
           fi
 
       - name: Set version & package (kalau diisi)
@@ -89,7 +98,7 @@ jobs:
             VN="$VN" PKG="$PKG" VC="$VC" perl -pi -e 's/(versionName[^"=]*[= ]*")[^"]*(")/${1}$ENV{VN}${2}/g if $ENV{VN}; s/(applicationId[^"=]*[= ]*")[^"]*(")/${1}$ENV{PKG}${2}/g if $ENV{PKG}; s/(versionCode[^0-9]*)[0-9]+/${1}$ENV{VC}/g;' "$G"
             echo "VER/PKG: diterapkan"
           else
-            echo "VER/PKG: build.gradle tidak ditemukan -> pakai default"
+            echo "VER/PKG: build.gradle tidak ditemukan -> default"
           fi
 
       - name: Generate wrapper & build APK
