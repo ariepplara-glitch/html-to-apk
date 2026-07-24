@@ -63,6 +63,9 @@
     <h2>📤 1. Upload File HTML <span class="badge">game kamu</span></h2>
     <div class="drop" id="drop">📁 Klik / tarik file <b>.html</b> ke sini<br><small id="fname">belum ada file</small></div>
     <input type="file" id="fileIn" accept=".html,.htm">
+    <label style="display:block;font-size:12px;color:var(--mut);margin:12px 0 4px">🖼️ Icon APK (opsional • PNG square)</label>
+<div class="drop" id="iconDrop">🖼️ Klik / tarik <b>icon</b> ke sini<br><small id="iconName">kosong = icon default</small></div>
+<input type="file" id="iconIn" accept="image/png,image/jpeg,image/webp" style="display:none">
     <p class="note">⚠️ Versi ini support <b>1 file HTML self‑contained</b> (CSS/JS inline). Game multi‑file = upgrade lanjutan.</p>
   </div>
 
@@ -78,7 +81,7 @@
     <label>Warna Tema</label>
     <input type="color" id="theme" value="#6C5CE7">
     <p class="slug">💡 Game akan di‑commit ke <code>games/<span id="slug">game-pertamaku</span>/index.html</code></p>
-    <p class="note">⚠️ Saat ini <b>Nama Aplikasi</b> yang ikut ke APK. Package ID/Versi/Warna masih preview (ikut ke APK = upgrade lanjutan).</p>
+    <p class="note">⚠️ <b>Nama, Versi, & Package ID</b> sekarang ikut ke APK. Warna tema masih preview (belum di‑wire).</p>
   </div>
 
   <!-- 3 PREVIEW -->
@@ -123,6 +126,14 @@ const API='https://api.github.com';
 const $=id=>document.getElementById(id);
 let token=localStorage.getItem('gh_token')||'';
 let htmlFile=null, htmlContent='';
+let iconFile=null;
+const iconDrop=$('iconDrop');
+iconDrop.addEventListener('click',()=>$('iconIn').click());
+iconDrop.addEventListener('dragover',e=>{e.preventDefault();iconDrop.classList.add('on')});
+iconDrop.addEventListener('dragleave',()=>iconDrop.classList.remove('on'));
+iconDrop.addEventListener('drop',e=>{e.preventDefault();iconDrop.classList.remove('on');if(e.dataTransfer.files[0])setIcon(e.dataTransfer.files[0])});
+$('iconIn').addEventListener('change',e=>{if(e.target.files[0])setIcon(e.target.files[0])});
+function setIcon(f){iconFile=f;$('iconName').innerHTML='<span class="ok">✅ '+f.name+'</span>';}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ---------- util ---------- */
@@ -173,9 +184,9 @@ async function latestDispatchId(){
   const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/runs?per_page=5&event=workflow_dispatch`,{headers:auth()});
   const runs=(await r.json()).workflow_runs||[]; return runs.length?runs[0].id:0;
 }
-async function triggerBuild(slug,name){
+async function triggerBuild(slug,name,ver,pkg){
   const r=await fetch(`${API}/repos/${OWNER}/${REPO}/actions/workflows/build.yml/dispatches`,
-    {method:'POST',headers:auth(),body:JSON.stringify({ref:BRANCH,inputs:{game_folder:slug,app_name:name}})});
+    {method:'POST',headers:auth(),body:JSON.stringify({ref:BRANCH,inputs:{game_folder:slug,app_name:name,version_name:ver||'',package_id:pkg||''}})});
   if(r.status!==204)throw new Error('Trigger gagal ('+r.status+')');
 }
 async function waitForRun(beforeId){
@@ -216,10 +227,11 @@ $('buildBtn').addEventListener('click',async()=>{
     log('1/5 Commit game ke repo…');
     await commitFile(`games/${slug}/index.html`,await fileToBase64(htmlFile),`Upload game: ${name}`);
     log('   ✅ committed → games/'+slug+'/index.html');
+        if(iconFile){ log('   🖼️ commit icon…'); await commitFile(`games/${slug}/icon.png`, await fileToBase64(iconFile), `Icon: ${name}`); log('   ✅ icon committed → games/'+slug+'/icon.png'); }
     log('2/5 Picu GitHub Actions…');
     const beforeId=await latestDispatchId();
-    await triggerBuild(slug,name);
-    log('   ✅ build dipicu');
+    await triggerBuild(slug,name,$('ver').value.trim(),$('pkgId').value.trim());
+    log('   ✅ build dipicu (v'+($('ver').value.trim()||'default')+', '+($('pkgId').value.trim()||'default')+')');
     log('3/5 Menunggu build selesai (±2–5 menit)…');
     const run=await waitForRun(beforeId);
     if(run.conclusion!=='success')throw new Error('Build '+run.conclusion+'. Buka log di GitHub.');
@@ -238,6 +250,18 @@ $('buildBtn').addEventListener('click',async()=>{
 });
 $('dlApk').classList.add('hidden');
 syncMeta();
+/* ===== AUTO PACKAGE ID — brand com.agunpu (nempel otomatis) ===== */
+let pkgTouched=false;
+function pkgSafe(s){
+  var t=(s||'').toLowerCase().replace(/[^a-z0-9]+/g,''); // gabung alnum, buang spasi/simbol
+  if(!t) t='game';            // fallback kalau nama kosong
+  if(/^[0-9]/.test(t)) t='g'+t; // segment TIDAK boleh mulai angka (aturan Android)
+  return t;
+}
+function autoPkg(){ if(pkgTouched) return; $('pkgId').value='com.agunpu.'+pkgSafe($('appName').value); }
+$('pkgId').addEventListener('input',function(){ pkgTouched=true; }); // user ketik manual = stop auto
+$('appName').addEventListener('input',autoPkg);
+autoPkg(); // isi saat halaman load
 </script>
 </body>
 </html>
